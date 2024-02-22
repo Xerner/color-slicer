@@ -6,11 +6,11 @@
       "type": "shell",
       "command": "python",
       "args": [
-        "A:/Projects/KMeansMeshGen/tests/test.py"
+        "A:/Projects/KMeansMeshGen/python/tests/test.py"
       ],
       "options": {
         "env": {
-          "PYTHONPATH": "A:/Projects/KMeansMeshGen"
+          "PYTHONPATH": "A:/Projects/KMeansMeshGen/python"
         }
       },
     }

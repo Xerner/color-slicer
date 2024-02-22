@@ -5,10 +5,10 @@
 			"name": "Python Debugger: Python File",
 			"type": "debugpy",
 			"env": {
-				"PYTHONPATH": "A:/Projects/KMeansMeshGen"
+				"PYTHONPATH": "A:/Projects/KMeansMeshGen/python"
 			},
 			"request": "launch",
-			"program": "A:/Projects/KMeansMeshGen/tests/test.py"
+			"program": "A:/Projects/KMeansMeshGen/python/tests/test.py"
 		}
 	]
 }
