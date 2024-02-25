@@ -1,0 +1,15 @@
+<!-- https://stackblitz.com/edit/angular-material-file-input-with-form-field?file=src%2Fapp%2Fapp.component.html -->
+<mat-form-field class="w-full cursor-pointer" (click)="fileInput.click()">
+  <mat-label>{{ label }}</mat-label>
+  <button mat-icon-button matPrefix class="px-3">
+    <mat-icon>{{ icon }}</mat-icon>
+  </button>
+  <input type="text" readonly matInput [formControl]="display" />
+  <input
+    type="file"
+    hidden
+    #fileInput
+    (change)="handleFileInputChange(fileInput.files)"
+  />
+  <mat-error>this field is required</mat-error>
+</mat-form-field>

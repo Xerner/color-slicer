@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Python Script",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "./tests/test.py"
+        // "A:/Projects/KMeansMeshGen/python/tests/test.py"
+      ],
+      "options": {
+        "env": {
+          "PYTHONPATH": "A:/Projects/KMeansMeshGen/python"
+          // "PYTHONPATH": "A:/Projects/KMeansMeshGen/python"
+        }
+      },
+    }
+  ]
+}

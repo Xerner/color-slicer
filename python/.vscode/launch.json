@@ -1,0 +1,16 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Python Debugger: Python File",
+			"type": "debugpy",
+			"env": {
+				"PYTHONPATH": "./"
+				// "PYTHONPATH": "A:/Projects/KMeansMeshGen/python"
+			},
+			"request": "launch",
+			// "program": "A:/Projects/KMeansMeshGen/python/tests/test.py"
+			"program": "./tests/test.py"
+		}
+	]
+}
