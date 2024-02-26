@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Pixel } from '../models/pixel';
+import { ReplaySubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ImageService {
+  onImageFileSelected = new ReplaySubject<File>(0);
+
   // Good
   getOutputFilename(filename: string, index: number) {
     return `${filename}_layer_${index}.png`;

@@ -1,10 +1,11 @@
 <form class="flex flex-wrap p-5 gap-y-3">
-  <app-file-input label="Upload File" icon="attach_file" class="w-full"></app-file-input>
+  <app-file-input label="Upload File" icon="attach_file" class="w-full" (fileChange)="handleFileChange($event)"></app-file-input>
   <mat-form-field class="w-full">
     <mat-label class="w-full">Number of Clusters</mat-label>
     <input matInput placeholder="4" class="w-full" type="number">
   </mat-form-field>
-  <div class="w-full flex justify-end">
+  <div class="w-full flex justify-end gap-x-3">
+    <button mat-raised-button color="primary" (click)="reset()">Reset</button>
     <button mat-raised-button color="primary">Generate</button>
   </div>
 </form>

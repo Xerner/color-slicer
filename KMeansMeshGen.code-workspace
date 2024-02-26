@@ -1,14 +1,21 @@
 {
 	"folders": [
-		{
-			"path": "."
-		},
-		{
-			"path": "angular/src/app"
-		},
-		{
-			"path": "python"
-		}
-	],
+    {
+      "name": "KMeansMeshGen",
+      "path": "."
+    },
+    {
+      "name": "angular",
+      "path": "angular"
+    },
+    {
+      "name": "app",
+      "path": "angular/src/app"
+    },
+    {
+      "name": "python",
+      "path": "python"
+    }
+  ],
   "settings": {}
 }

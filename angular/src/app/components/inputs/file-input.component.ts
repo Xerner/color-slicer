@@ -1,9 +1,11 @@
-import { Component, Input, VERSION } from "@angular/core";
+import { Component, ElementRef, EventEmitter, Input, Output, VERSION, ViewChild } from "@angular/core";
 import { FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
+import { Event } from "@angular/router";
+import { AppService } from "../../services/app.service";
 
 /**
  * https://stackblitz.com/edit/angular-material-file-input-with-form-field?file=src%2Fapp%2Fapp.component.ts
@@ -17,36 +19,33 @@ import { MatInputModule } from "@angular/material/input";
 export class FileInputComponent {
   @Input() label = "Upload";
   @Input() icon = "attach_file";
-  name = "Angular " + VERSION.major;
+  @Output('fileChange') fileChange = new EventEmitter<File>();
   display = new FormControl("", Validators.required);
-  fileList: FileList | null = null;
-  filePaths: Array<string> = [];
 
-  handleFileInputChange(fileList: FileList | null): void {
-    if (!fileList) {
-      return;
-    }
-    this.fileList = fileList;
-    if (fileList.length) {
-      const f = fileList[0];
-      const count = fileList.length > 1 ? `(+${fileList.length - 1} files)` : "";
-      this.display.patchValue(`${f.name}${count}`);
-    } else {
-      this.display.patchValue("");
-    }
+  @ViewChild('fileInput', { static: true }) set fileInputRef(ref: ElementRef<HTMLInputElement>) {
+    this.fileInput = ref.nativeElement;
+  }
+  fileInput!: HTMLInputElement;
+
+  constructor(private appService: AppService) { }
+
+  ngOnInit() {
+    this.appService.reset.subscribe(this.reset.bind(this));
   }
 
-  handleSubmit(): void {
-    if (!this.fileList) {
+  handleFileInputChange(): void {
+    var fileList = this.fileInput.files;
+    if (!fileList || fileList.length == 0) {
+      this.display.patchValue("");
       return;
     }
-    var fd = new FormData();
-    this.filePaths = [];
-    for (let i = 0; i < this.fileList.length; i++) {
-      fd.append("files", this.fileList[i], this.fileList[i].name);
-      this.filePaths.push(this.fileList[i].name);
-    }
+    var file = fileList[0];
+    this.display.patchValue(file.name);
+    this.fileChange.emit(file);
+  }
 
-    // do submit ajax
+  reset() {
+    this.display.patchValue("");
+    this.fileInput.value = "";
   }
 }

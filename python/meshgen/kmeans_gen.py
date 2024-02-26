@@ -60,4 +60,3 @@ class KmeansMeshGen():
     inverse_mask_with_shape = np.repeat(inverse_mask[:, :, np.newaxis], image_array.shape[2], axis=2)
     return np.where(inverse_mask_with_shape, image_array, surrogate_value)
   
-  
