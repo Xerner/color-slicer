@@ -1,0 +1,16 @@
+@if (isImageDisplayEmpty()) {
+  <div class="flex flex-col gap-y-2 h-full justify-center items-center">
+    <mat-icon title="No Image">image</mat-icon>
+    <div>No Image</div>
+  </div>
+}
+@else {
+  <div class="h-full flex flex-col">
+    <div class="flex justify-center items-center grow">
+      <img #rawImage [src]="src" [alt]="alt" [title]="alt">
+    </div>
+    <div class="flex justify-center items-center p-5">
+      <canvas #canvas class="outline outline-blue-500"></canvas>
+    </div>
+  </div>
+}

@@ -1,13 +1,13 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { ImageService } from '../../services/image.service';
 import { MatIconModule } from '@angular/material/icon';
-import { DisplayImageComponent } from './display-image/display-image.component';
+import { DisplayCanvasComponent } from './display-image/display-canvas.component';
 
 @Component({
   selector: 'app-display-page',
   standalone: true,
   templateUrl: './display-page.component.html',
-  imports: [MatIconModule, DisplayImageComponent],
+  imports: [MatIconModule, DisplayCanvasComponent],
 })
 export class DisplayPageComponent {
   rawImageDataUrl: string = "";

@@ -7,6 +7,7 @@ import { ReplaySubject } from 'rxjs';
 })
 export class ImageService {
   onImageFileSelected = new ReplaySubject<File>(0);
+  onImageDataLoaded = new ReplaySubject<Pixel[]>(0);
 
   // Good
   getOutputFilename(filename: string, index: number) {
