@@ -1,5 +1,7 @@
-import { Component, ElementRef, Input, SimpleChange, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { AppService } from '../../../services/app.service';
+import { ImageService } from '../../../services/image.service';
 
 @Component({
   selector: 'app-display-canvas',
@@ -8,14 +10,18 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [MatIconModule],
 })
 export class DisplayCanvasComponent {
-  @Input() src: string = "";
-  @Input() alt: string = "";
+  get src() {
+    return this.appService.fileData().dataUrl;
+  }
+  get alt() {
+    return this.appService.fileData().file.name;
+  }
   @ViewChild('rawImage') set imageRef(element: ElementRef<HTMLImageElement>) {
     if (element == undefined) {
       return;
     }
     this.image = element.nativeElement;
-    this.image.onload = this.getImageData.bind(this);
+    this.image.onload = () => this.imageService.updateImageData(this.image, this.canvas);
     this.image.onerror = (error) => console.log("Error loading image", error);
   }
   image!: HTMLImageElement;
@@ -28,43 +34,10 @@ export class DisplayCanvasComponent {
   }
   canvas!: HTMLCanvasElement;
 
-  // _image!: HTMLImageElement;
-  // get image() {
-  //   if (this._image == undefined) {
-  //     this._image = new Image();
-  //   }
-  //   return this._image;
-  // }
-
-  ngOnChanges(changes: SimpleChanges) {
-    if (this.image == undefined) {
-      return;
-    }
-    this.image.src = changes['src']?.currentValue;
-  }
-
+  constructor(private appService: AppService, private imageService: ImageService) {}
+  
   isImageDisplayEmpty(): boolean {
     return this.src == "";
-  }
-
-  getImageData() {
-    if (this.canvas == undefined) {
-      console.log("Canvas is undefined");
-      return;
-    }
-    var context = this.canvas.getContext('2d')!;
-    this.clearContext(context);
-    this.canvas.width = this.image.width;
-    this.canvas.height = this.image.height;
-    var width = this.image.width;
-    var height = this.image.height;
-    context.drawImage(this.image, 0, 0, width, height);
-    var imgd: ImageData = context.getImageData(0, 0, this.canvas.width, this.canvas.height);
-    console.log(imgd);
-  }
-
-  clearContext(context: CanvasRenderingContext2D) {
-    context.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
   isFreshImage() {

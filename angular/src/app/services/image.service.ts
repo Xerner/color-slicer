@@ -1,61 +1,55 @@
 import { Injectable } from '@angular/core';
 import { Pixel } from '../models/pixel';
-import { ReplaySubject } from 'rxjs';
+import { AppService } from './app.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ImageService {
-  onImageFileSelected = new ReplaySubject<File>(0);
-  onImageDataLoaded = new ReplaySubject<Pixel[]>(0);
+  constructor(private appService: AppService) { }
 
-  // Good
+  updateImageData(image: HTMLImageElement, canvas: HTMLCanvasElement): Pixel[] {
+    if (canvas == undefined) {
+      console.log("Canvas is undefined");
+      return [];
+    }
+    var context = canvas.getContext('2d')!;
+    this.updateCanvasImage(image, canvas)
+    var imageData: ImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    var pixels = this.imageDataToPixels(imageData);
+    this.appService.imageData.set(imageData);
+    this.appService.rawPixels.set(pixels);
+    return pixels;
+  }
+
+  private updateCanvasImage(image: HTMLImageElement, canvas: HTMLCanvasElement) {
+    this.clearContext(canvas);
+    canvas.width = image.width;
+    canvas.height = image.height;
+    var context = canvas.getContext('2d')!;
+    context.drawImage(image, 0, 0, image.width, image.height);
+  }
+
+  private imageDataToPixels(imageData: ImageData): Pixel[] {
+    var pixels: Pixel[] = [];
+    imageData.data.forEach((_, i) => {
+      if (i % 4 == 0) {
+        pixels.push(new Pixel(imageData.data[i], imageData.data[i + 1], imageData.data[i + 2], imageData.data[i + 3]));
+      }
+    })
+    return pixels;
+  }
+
+  private clearContext(canvas: HTMLCanvasElement) {
+    var context = canvas.getContext('2d')!;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
   getOutputFilename(filename: string, index: number) {
     return `${filename}_layer_${index}.png`;
   }
 
-  // Good
-  addAlphaChannel(image: Pixel[], alphaValue = 255) {
-    image.forEach(pixel => pixel.a = alphaValue);
-  }
-
-  // Bad
-  loadImage(imagePath: string): { rgbPixels: Pixel[], rgbaPixels: Pixel[] } {
-    console.log("Loading image")
-    // rgb_image = Image.open(os.path.abspath(image_path))
-    // rgba_image = rgb_image.convert('RGBA')
-    // return rgb_image, rgba_image
-    return { rgbPixels: [], rgbaPixels: [] };
-  }
-
-  // Bad
-  writeImage(pixels: Pixel[], imageFilepath: string, outputDir: string, i: number) {
-    var filename = "";
-    // var filename = os.path.splitext(os.path.basename(imageFilepath))[0]
-    var outputFilename = this.getOutputFilename(filename, i)
-    var outputPath = "";
-    // var outputPath = os.path.join(outputDir, outputFilename)
-    console.log(`Writing image for layer ${i} to ${outputPath}`)
-    // pixels = this.convert_rgba_array_to_saveable_type(pixels)
-    // image = Image.fromarray(pixels, 'RGBA')
-    // image.save(outputPath)
-  }
-
-  // Bad
-  /**
-   * This needs a better name
-   * @param self 
-   * @param pixels 
-   */
-  reshapeImage(pixels: Pixel[]): { rgbPixels2D: Pixel[], original_shape: number[] } {
-    // image_array_2d = image_array.reshape(-1, 3) // Turn the 3D image array to a 2D array
-    // self.logger.info(f"Image Array\n\n{image_array_2d}\n")
-    // return image_array_2d, image_array.shape[:2]
-    return { rgbPixels2D: [], original_shape: [] };
-  }
-  
-  // Good
-  getImageAveragePixel(pixels: Pixel[], ignoreValue: Pixel): Pixel {
+  getAveragePixel(pixels: Pixel[], ignoreValue: Pixel): Pixel {
     var averagePixel = pixels.reduce((curPixel, prevPixel, i) => {
       if (curPixel != ignoreValue) {
         return prevPixel.add(curPixel);
@@ -64,21 +58,5 @@ export class ImageService {
       }
     }).divide(pixels.length);
     return averagePixel
-  }
-  
-  // convert_rgba_array_to_saveable_type(self, rgba_array: np.ndarray) -> np.ndarray:
-  //   list = rgba_array.tolist()
-  //   for i in range(len(list)):
-  //     row = list[i]
-  //     for j in range(len(row)):
-  //       pixel = list[i][j]  
-  //       list[i][j] = (pixel[0], pixel[1], pixel[2], pixel[3])
-  //   return np.array(list, dtype=np.uint8)
-  
-  // Good
-  createColorLayer(pixels: Pixel[], colorLabels: number[], targetLabel: number, emptyPixel = new Pixel(0, 0, 0, 0)) {
-    var averagePixel = this.getImageAveragePixel(pixels, new Pixel(0, 0, 0, 0));
-    var colorLayer = pixels.map((_, i) => colorLabels[i] === targetLabel ? averagePixel : emptyPixel);
-    return colorLayer
   }
 }
