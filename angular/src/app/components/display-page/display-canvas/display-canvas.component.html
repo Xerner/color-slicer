@@ -1,0 +1,18 @@
+@if (!hasImageData()) {
+  <app-centered-icon icon="image" title="No Image" class="grow">
+    No Image
+  </app-centered-icon>
+}
+<div class="flex items-center justify-center {{!hasImageData() ? HIDDEN_CLASS : 'h-full'}}">
+  <canvas #canvas [class]="canvasClass()"></canvas>
+</div>
+<mat-toolbar class="gap-x-3">
+  <mat-slider min="0.5" max="5" step="0.01" [disabled]="!hasImageData()" discrete [displayWith]="formatSliderLabel" style="width: 100%;">
+    <input matSliderThumb [value]="sliderRawValue()" (valueChange)="onSliderChange($event)" style="width: 100%;">
+  </mat-slider>
+  <mat-icon>close</mat-icon>
+  <!-- <mat-form-field> -->
+    <!-- <mat-label>Scale Multiplier</mat-label> -->
+    <input type="number" [value]="sliderMultiplier()" (change)="onSliderMultiplierChange($event)" class="scale-multiplier p-1 mat-toolbar border-b-2">
+  <!-- </mat-form-field> -->
+</mat-toolbar>

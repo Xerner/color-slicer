@@ -1,14 +1,20 @@
-<form class="flex flex-wrap p-5 gap-y-3">
+<div class="flex flex-wrap p-5 gap-y-3">
+  
+  <p class="text-lg">Raw Image</p>
+
   <app-file-input label="Upload File" icon="attach_file" class="w-full" (fileChange)="handleFileChange($event)"></app-file-input>
-  <mat-slider min="0.5" max="5" step="0.1" value="1">
-    <input matSliderThumb>
-  </mat-slider>
+
+  <mat-divider class="p-3 w-full"></mat-divider>
+
+  <p class="text-lg">K-Means</p>
+
   <mat-form-field class="w-full">
     <mat-label class="w-full">Number of Clusters</mat-label>
     <input matInput placeholder="4" class="w-full" type="number">
   </mat-form-field>
+
   <div class="w-full flex justify-end gap-x-3">
     <button mat-raised-button color="primary" (click)="reset()">Reset</button>
     <button mat-raised-button color="primary">Generate</button>
   </div>
-</form>
+</div>

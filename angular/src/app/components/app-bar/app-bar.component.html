@@ -1,4 +1,16 @@
-<div class="p-5 text-xl bg-slate-500 font-medium flex align-center gap-x-3">
-  <mat-icon>image</mat-icon>
-  Image → 3D Mesh With K-Means
-</div>
+<!-- <div class="p-5 text-xl bg-slate-500 font-medium flex align-center gap-x-3">
+</div> -->
+<mat-toolbar color="primary">
+  <button mat-icon-button aria-label="Example icon-button with menu icon">
+    <mat-icon>image</mat-icon>
+  </button>
+  <span>Image → 3D Mesh With K-Means</span>
+  <span class="grow"></span>
+  <a href="https://github.com/Xerner/KMeansMeshGen" target="_blank">
+    <button mat-icon-button aria-label="Github link">
+      <!-- Having issues registering github as an svgIcon. Something about the HttpClient not being injected even though it is  -->
+      <mat-icon svgIcon="github"></mat-icon>
+      <!-- <mat-icon>emoticon</mat-icon> -->
+    </button>
+  </a>
+</mat-toolbar>

@@ -5,25 +5,33 @@ import { FileInputComponent } from '../inputs/file-input.component';
 import { MatButtonModule } from '@angular/material/button';
 import { AppService } from '../../services/app.service';
 import { MatSliderModule } from '@angular/material/slider';
+import { MatDividerModule } from '@angular/material/divider';
+import { FileService } from '../../services/file.service';
 
 @Component({
   selector: 'app-user-input-page',
   standalone: true,
-  imports: [MatFormFieldModule, MatInputModule, FileInputComponent, MatButtonModule, MatSliderModule],
+  imports: [
+    MatFormFieldModule,
+    MatInputModule,
+    FileInputComponent, 
+    MatButtonModule, 
+    MatDividerModule,
+  ],
   templateUrl: './user-input-page.component.html',
 })
 export class UserInputPageComponent {
-  get fileData() {
-    return this.appService.fileData();
-  }
   file: File | null = null;
   bytes: Uint8Array | null = null;
   dataUrl: string | null = null;
 
-  constructor(private appService: AppService) { }
+  constructor(
+    private appService: AppService,
+    private fileService: FileService,
+  ) { }
 
   handleFileChange(file: File): void {
-    this.appService.updateFileData(file);
+    this.fileService.updateFileData(file);
   }
 
   reset() {

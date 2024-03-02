@@ -1,33 +1,37 @@
 import { Injectable } from '@angular/core';
 import { Pixel } from '../models/pixel';
 import { AppService } from './app.service';
+import { FileData } from '../models/fileData';
+import { BehaviorSubject, ReplaySubject, combineLatest, filter } from 'rxjs';
+import { FileService } from './file.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ImageService {
-  constructor(private appService: AppService) { }
+  rawImageContext2D = new ReplaySubject<CanvasRenderingContext2D>(0);
+  rawImage = new BehaviorSubject<FileData | null>(null);
+  readonly IDENTITY_TRANSFORM = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 
-  updateImageData(image: HTMLImageElement, canvas: HTMLCanvasElement): Pixel[] {
-    if (canvas == undefined) {
-      console.log("Canvas is undefined");
-      return [];
-    }
-    var context = canvas.getContext('2d')!;
-    this.updateCanvasImage(image, canvas)
-    var imageData: ImageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    var pixels = this.imageDataToPixels(imageData);
-    this.appService.imageData.set(imageData);
-    this.appService.rawPixels.set(pixels);
-    return pixels;
+  constructor(
+    private appService: AppService,
+    private fileService: FileService,
+  ) {
+    this.appService.reset.subscribe(this.onReset.bind(this));
+    combineLatest([
+      this.rawImageContext2D,
+      this.fileService.rawFileData.pipe(filter((fileData) => fileData != null)), 
+    ]).subscribe((args) => {
+      const [context, fileData] = args;
+      this.updateImage(context, fileData!);
+    });
   }
 
-  private updateCanvasImage(image: HTMLImageElement, canvas: HTMLCanvasElement) {
-    this.clearContext(canvas);
-    canvas.width = image.width;
-    canvas.height = image.height;
-    var context = canvas.getContext('2d')!;
-    context.drawImage(image, 0, 0, image.width, image.height);
+  public updateImage(context: CanvasRenderingContext2D, fileData: FileData) {
+    this.drawImage(context, fileData);
+    var imageData: ImageData = this.getImageData(context);
+    fileData.rawImageData = imageData;
+    this.rawImage.next(fileData);
   }
 
   private imageDataToPixels(imageData: ImageData): Pixel[] {
@@ -40,9 +44,45 @@ export class ImageService {
     return pixels;
   }
 
-  private clearContext(canvas: HTMLCanvasElement) {
-    var context = canvas.getContext('2d')!;
-    context.clearRect(0, 0, canvas.width, canvas.height);
+  getImageData(context: CanvasRenderingContext2D): ImageData {
+    var currentImageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+    var currentTransform = context.getTransform();
+    context.setTransform(this.IDENTITY_TRANSFORM);
+    var unalteredImageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+    context.setTransform(currentTransform);
+    context.putImageData(currentImageData, 0, 0);
+    return unalteredImageData;
+  }
+
+  drawImage(context: CanvasRenderingContext2D, fileData: FileData) {
+    this.clearContext(context);
+    this.resizeCanvas(context, fileData);
+    context.imageSmoothingEnabled = false;
+    context.drawImage(fileData.image, 0, 0, context.canvas.width, context.canvas.height);
+  }
+
+  // drawImageData(context: CanvasRenderingContext2D, imageData: ImageData) {
+  //   this.clearContext(context);
+  //   this.resizeCanvas(context, imageData);
+  //   context.putImageData(imageData, 0, 0);
+  // }
+
+  clearContext(context: CanvasRenderingContext2D) {
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+  }
+
+  resizeCanvas(context: CanvasRenderingContext2D, image: FileData | ImageData) {
+    var transform = context.getTransform();
+    if (image instanceof FileData) {
+      var width = image.image.width;
+      var height = image.image.height;
+    }
+    else {
+      var width = image.width;
+      var height = image.height;
+    }
+    context.canvas.width = width * transform.a;
+    context.canvas.height = height * transform.d;
   }
 
   getOutputFilename(filename: string, index: number) {
@@ -53,10 +93,13 @@ export class ImageService {
     var averagePixel = pixels.reduce((curPixel, prevPixel, i) => {
       if (curPixel != ignoreValue) {
         return prevPixel.add(curPixel);
-      } else {
-        return prevPixel;
       }
+      return prevPixel;
     }).divide(pixels.length);
     return averagePixel
+  }
+
+  onReset() {
+    this.rawImage.next(null);
   }
 }

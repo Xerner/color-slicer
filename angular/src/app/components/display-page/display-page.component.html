@@ -1,3 +1,19 @@
 <div class="shadow-inner bg-slate-300 w-full h-full flex flex-col">
-  <app-display-canvas class="h-full"></app-display-canvas>
+  <mat-tab-group (selectedTabChange)="onTabChange($event)">
+    <mat-tab label="Raw Image"></mat-tab>
+    <mat-tab [disabled]="!hasRawImageData()" label="Kmeans Clustered"></mat-tab>
+  </mat-tab-group>
+  @switch (tabIndex) {
+    @case (0) {
+      <app-display-canvas 
+        [imageData]="rawImage()"
+        (context)="onRawImageCanvasContextReady($event)"></app-display-canvas>
+    }
+    @case (1) {
+      <!-- <app-display-canvas class="h-full flex justify-center items-center"></app-display-canvas> -->
+    }
+    @default {
+      <div>Invalid Tab</div>
+    }
+  }
 </div>
