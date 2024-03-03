@@ -1,10 +1,9 @@
-import { Component, ElementRef, EventEmitter, Input, Output, VERSION, ViewChild } from "@angular/core";
-import { FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
+import { Component, ElementRef, EventEmitter, Output, ViewChild, forwardRef, input, signal } from "@angular/core";
+import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
-import { Event } from "@angular/router";
 import { AppService } from "../../services/app.service";
 
 /**
@@ -15,37 +14,69 @@ import { AppService } from "../../services/app.service";
   templateUrl: "./file-input.component.html",
   standalone: true,
   imports: [MatIconModule, MatFormFieldModule, ReactiveFormsModule, MatInputModule, MatButtonModule],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => FileInputComponent),
+      multi: true
+    }
+  ]
 })
-export class FileInputComponent {
-  @Input() label = "Upload";
-  @Input() icon = "attach_file";
-  @Output('fileChange') fileChange = new EventEmitter<File>();
-  display = new FormControl("", Validators.required);
-
-  @ViewChild('fileInput', { static: true }) set fileInputRef(ref: ElementRef<HTMLInputElement>) {
+export class FileInputComponent implements ControlValueAccessor {
+  label = input("Upload");
+  icon = input("attach_file");
+  disabled = signal<boolean>(false);
+  fileName = new FormControl("", Validators.required);
+  private onChange!: (file: File) => void;
+  private onTouched!: () => void;
+  
+  @ViewChild('fileInput', { static: true }) 
+  set fileInputRef(ref: ElementRef<HTMLInputElement>) {
     this.fileInput = ref.nativeElement;
   }
   fileInput!: HTMLInputElement;
 
   constructor(private appService: AppService) { }
 
-  ngOnInit() {
-    this.appService.reset.subscribe(this.reset.bind(this));
+  writeValue(file: File | null): void {
+    if (file == null) {
+      this.fileName.patchValue("");
+      this.fileInput.value = "";
+      return;
+    }
+    this.updateFile(file);
+  }
+
+  registerOnChange(fn: any): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: any): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState?(isDisabled: boolean): void {
+    this.disabled.set(isDisabled);
   }
 
   handleFileInputChange(): void {
     var fileList = this.fileInput.files;
     if (!fileList || fileList.length == 0) {
-      this.display.patchValue("");
+      this.fileName.patchValue("");
       return;
     }
     var file = fileList[0];
-    this.display.patchValue(file.name);
-    this.fileChange.emit(file);
+    this.updateFile(file);
   }
 
-  reset() {
-    this.display.patchValue("");
-    this.fileInput.value = "";
+  updateFile(file: File) {
+    this.fileName.patchValue(file.name);
+    this.onChange(file);
+  }
+
+  
+
+  public onBlur(): void {
+    this.onTouched();
   }
 }

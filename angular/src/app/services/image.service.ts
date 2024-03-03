@@ -11,6 +11,7 @@ import { FileService } from './file.service';
 export class ImageService {
   rawImageContext2D = new ReplaySubject<CanvasRenderingContext2D>(0);
   rawImage = new BehaviorSubject<FileData | null>(null);
+  clusteredImage = new BehaviorSubject<FileData | null>(null);
   readonly IDENTITY_TRANSFORM = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 
   constructor(

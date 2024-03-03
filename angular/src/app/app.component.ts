@@ -18,6 +18,9 @@ import { DomSanitizer } from '@angular/platform-browser';
     DisplayPageComponent, 
     MatIconModule, 
   ],
+  host: {
+    class: "block h-screen flex flex-col"
+  },
   templateUrl: './app.component.html'
 })
 export class AppComponent {
