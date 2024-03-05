@@ -1,0 +1,6 @@
+
+<mat-selection-list #shoes [multiple]="false">
+  @for (image of images(); track $index) {
+    <mat-list-option [value]="image">{{image.name}}</mat-list-option>
+  }
+</mat-selection-list>

@@ -31,14 +31,9 @@
         <button mat-raised-button color="primary" (click)="reset()">Reset</button>
         <div class="flex gap-x-3">
           <button mat-button matStepperPrevious>Previous</button>
-          <button mat-raised-button color="primary">Generate</button>
+          <button mat-raised-button color="primary" [disabled]="!isReadyForKmeans()" (click)="generateKmeansImages()">Generate</button>
         </div>
-        <!-- <button mat-button matStepperNext>Next</button> -->
       </div>
     </form>
   </mat-step>
 </mat-stepper>
-
-<div class="w-full flex justify-end gap-x-3 p-5">
-  <!-- <button mat-raised-button color="primary">Generate</button> -->
-</div>

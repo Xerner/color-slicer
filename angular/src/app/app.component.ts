@@ -6,6 +6,7 @@ import { UserInputPageComponent } from './components/user-input-page/user-input-
 import { DisplayPageComponent } from './components/display-page/display-page.component';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
+import { ImageSelectionComponent } from './components/image-selection/image-selection.component';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +18,7 @@ import { DomSanitizer } from '@angular/platform-browser';
     UserInputPageComponent, 
     DisplayPageComponent, 
     MatIconModule, 
+    ImageSelectionComponent,
   ],
   host: {
     class: "block h-screen flex flex-col"

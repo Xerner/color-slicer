@@ -1,7 +1,10 @@
 <app-bar></app-bar>
 <app-content class="grow">
   <div class="grid grid-cols-1 md:grid-cols-2 h-full">
-    <app-user-input-page></app-user-input-page>
+    <div class="grid grid-cols-1 md:grid-cols-3 h-full">
+      <app-user-input-page class="col-span-2"></app-user-input-page>
+      <app-image-selection class="col-span-1 bg-slate-100"></app-image-selection>
+    </div>
     <app-display-page></app-display-page>
   </div>
 </app-content>

@@ -3,13 +3,15 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FileInputComponent } from '../inputs/file-input.component';
 import { MatButtonModule } from '@angular/material/button';
-import { AppService } from '../../services/app.service';
-import { MatSliderModule } from '@angular/material/slider';
+import { AppStoreService } from '../../services/app.store.service';
 import { MatDividerModule } from '@angular/material/divider';
 import { FileService } from '../../services/file.service';
 import { MatStepper, MatStepperModule } from '@angular/material/stepper';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
+import { KmeansService } from '../../services/kmeans.service';
+import { ImageService } from '../../services/image.service';
+import { KmeansImageService } from '../../services/kmeans-image.service';
 
 @Component({
   selector: 'app-user-input-page',
@@ -32,9 +34,6 @@ import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
   templateUrl: './user-input-page.component.html',
 })
 export class UserInputPageComponent {
-  bytes: Uint8Array | null = null;
-  dataUrl: string | null = null;
-
   fileForm = new FormGroup({
     file: new FormControl<File | null>(null, Validators.required),
   });
@@ -46,12 +45,13 @@ export class UserInputPageComponent {
   @ViewChild(MatStepper, { static: true }) stepper!: MatStepper;
 
   constructor(
-    private appService: AppService,
+    private storeService: AppStoreService,
     private fileService: FileService,
+    private kmeansImageService: KmeansImageService,
   ) { }
 
   ngOnInit() {
-    this.appService.reset.subscribe(this.onReset.bind(this));
+    this.storeService.reset.subscribe(this.onReset.bind(this));
     this.fileForm.controls.file.valueChanges.subscribe(this.handleFileChange.bind(this));
   }
 
@@ -63,11 +63,31 @@ export class UserInputPageComponent {
   }
 
   reset() {
-    this.stepper.reset();
-    this.appService.reset.next();
+    this.storeService.reset.next();
   }
 
   onReset() {
-    this.fileForm.reset();
+    this.stepper.reset();
+    this.kmeansForm.controls.iterations.setValue(10);
+  }
+
+  isReadyForKmeans() {
+    return this.kmeansForm.valid;
+  }
+
+  generateKmeansImages() {
+    var rawImageData = this.storeService.rawImageData()
+    if (rawImageData == null) {
+      throw new Error("No image file")
+    }
+    var clusters = this.kmeansForm.controls.clusters.value
+    if (clusters == null) {
+      throw new Error("No clusters")
+    }
+    var iterations = this.kmeansForm.controls.iterations.value
+    if (iterations == null) {
+      throw new Error("No iterations")
+    }
+    this.kmeansImageService.generateKmeansImages(rawImageData, clusters, iterations, 0);
   }
 }

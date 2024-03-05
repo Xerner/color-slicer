@@ -1,32 +1,30 @@
 import { Injectable } from "@angular/core";
-import { FileData } from "../models/fileData";
-import { AppService } from "./app.service";
-import { ReplaySubject } from "rxjs";
+import { AppStoreService } from "./app.store.service";
+import { ImageService } from "./image.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class FileService {
-  rawFileData = new ReplaySubject<FileData | null>(0);
-
-  constructor(private appService: AppService) {
-    this.appService.reset.subscribe(this.onReset.bind(this));
+  constructor(
+    private storeService: AppStoreService,
+    private imageService: ImageService,
+  ) {
+    this.storeService.reset.subscribe(this.onReset.bind(this));
   }
 
   updateFileData(file: File): void {
     var fileReader = new FileReader();
     fileReader.onload = (event) => {
       var dataUrl = event.target?.result as string;
-      var image = new Image();
-      image.onload = () => {
-        this.rawFileData.next(new FileData(file, dataUrl, image, null));
-      }
-      image.src = dataUrl;
+      this.imageService.createImage(dataUrl).subscribe((image) => {
+        this.storeService.rawImageFile.set(image);
+      })
     };
     fileReader.readAsDataURL(file);
   }
 
   onReset() {
-    this.rawFileData.next(null);
+    this.storeService.rawImageFile.set(null);
   }
 }

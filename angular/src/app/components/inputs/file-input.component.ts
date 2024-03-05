@@ -4,7 +4,7 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
-import { AppService } from "../../services/app.service";
+import { AppStoreService } from "../../services/app.store.service";
 
 /**
  * https://stackblitz.com/edit/angular-material-file-input-with-form-field?file=src%2Fapp%2Fapp.component.ts
@@ -35,8 +35,6 @@ export class FileInputComponent implements ControlValueAccessor {
     this.fileInput = ref.nativeElement;
   }
   fileInput!: HTMLInputElement;
-
-  constructor(private appService: AppService) { }
 
   writeValue(file: File | null): void {
     if (file == null) {

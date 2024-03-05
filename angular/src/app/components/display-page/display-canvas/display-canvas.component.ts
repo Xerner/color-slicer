@@ -2,9 +2,8 @@ import { Component, ElementRef, Output, ViewChild, computed, effect, input } fro
 import { MatIconModule } from '@angular/material/icon';
 import { CenteredIconComponent } from '../../centered-icon/centered-icon.component';
 import { ImageService } from '../../../services/image.service';
-import { AppService } from '../../../services/app.service';
 import { BehaviorSubject } from 'rxjs';
-import { FileData } from '../../../models/fileData';
+import { FixedArray } from '../../../models/fixed-array';
 
 @Component({
   selector: 'app-display-canvas',
@@ -19,7 +18,8 @@ import { FileData } from '../../../models/fileData';
   ],
 })
 export class DisplayCanvasComponent {
-  imageData = input<FileData | null>();
+  imageData = input<HTMLImageElement | ImageData | null>();
+  size = input<FixedArray<number, 2> | null>();
   scale = input<number>(1);
   protected hasImageData = computed<boolean>(() => {
     return this.imageData() != null;
@@ -57,7 +57,6 @@ export class DisplayCanvasComponent {
 
   constructor(
     private imageService: ImageService,
-    private appService: AppService,
   ) { }
 
   redrawImage() {
@@ -71,7 +70,16 @@ export class DisplayCanvasComponent {
     }
     var imageScale = this.scale();
     context.scale(imageScale, imageScale);
-    this.imageService.drawImage(context, imageData);
+    if (imageData instanceof HTMLImageElement) {
+      this.imageService.drawImage(context, imageData);
+    } else {
+      var size = this.size();
+      if (size == null) {
+        console.error("No size provided for image data")
+        return;
+      }
+      this.imageService.drawImageData(context, imageData, ...size);
+    }
   }
 
   protected getCanvasClass() {

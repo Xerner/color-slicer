@@ -2,15 +2,15 @@ import { Component, computed, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { DisplayCanvasComponent } from './display-canvas/display-canvas.component';
 import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs';
-import { AppService } from '../../services/app.service';
+import { AppStoreService } from '../../services/app.store.service';
 import { FileService } from '../../services/file.service';
 import { ImageService } from '../../services/image.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatSliderModule } from '@angular/material/slider';
-import { FileData } from '../../models/fileData';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { KmeansImage } from '../../models/processedImage';
 
 @Component({
   selector: 'app-display-page',
@@ -20,7 +20,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
   imports: [
     MatIconModule, 
     DisplayCanvasComponent, 
-    MatTabsModule,
     MatToolbarModule,
     MatSliderModule, 
     MatFormFieldModule,
@@ -28,14 +27,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
   ],
 })
 export class DisplayPageComponent {
-  tabIndex = 0;
-  rawImage = toSignal<FileData | null>(this.imageService.rawImage);
-  hasRawImageData = computed<boolean>(() => {
-    return this.rawImage() != null;
-  });
-  clusteredImage = toSignal<FileData | null>(this.imageService.clusteredImage);
-  hasClusteredImageData = computed<boolean>(() => {
-    return this.clusteredImage() != null;
+  hasImageData = computed<boolean>(() => {
+    return this.storeService.rawImageFile() != null;
   });
   sliderValue = computed<number>(() => {
     return this.sliderRawValue() * this.sliderMultiplier();
@@ -44,31 +37,28 @@ export class DisplayPageComponent {
   sliderMultiplier = signal<number>(1);
 
   constructor(
-    protected appService: AppService,
+    protected storeService: AppStoreService,
     protected imageService: ImageService,
     protected fileService: FileService,
   ) {}
 
   ngOnInit() {
-    this.imageService.rawImage.subscribe(this.onRawImageChanged.bind(this));
-    this.appService.reset.subscribe(this.onReset.bind(this));
-  }
-  
-  onRawImageChanged(imageData: FileData | null) {
-    if (imageData == null) {
-      this.tabIndex = 0;
-    }
+    this.storeService.reset.subscribe(this.onReset.bind(this));
+    this.storeService.kmeansImage.subscribe(this.onKmeansImagesCreated.bind(this));
   }
 
   onRawImageCanvasContextReady(context: CanvasRenderingContext2D | null) {
     if (context == null) {
       return;
     }
-    this.imageService.rawImageContext2D.next(context)
+    this.storeService.rawImageContext2D.next(context)
   }
 
-  onTabChange(event: MatTabChangeEvent) {
-    this.tabIndex = event.index;
+  onKmeansImageCanvasContextReady(context: CanvasRenderingContext2D | null) {
+    if (context == null) {
+      return;
+    }
+    this.storeService.kmeansImageContext2D.next(context)
   }
 
   protected onSliderChange(value: number) {
@@ -87,5 +77,15 @@ export class DisplayPageComponent {
 
   protected formatSliderLabel(value: number) {
     return `${(value * 100).toFixed(0)}%`;
+  }
+
+  onKmeansImagesCreated(kmeansImage: KmeansImage | null) {
+    if (kmeansImage == null) {
+      return;
+    }
+    kmeansImage.imagesLoaded$.subscribe(() => {
+      var kmeansImage = this.storeService.kmeansImage.getValue();
+      var labeledColorsImage = kmeansImage?.labeledColorsImage.getValue();
+    });
   }
 }

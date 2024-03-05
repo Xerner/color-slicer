@@ -1,41 +1,73 @@
 import { Injectable } from '@angular/core';
 import { Pixel } from '../models/pixel';
-import { AppService } from './app.service';
-import { FileData } from '../models/fileData';
-import { BehaviorSubject, ReplaySubject, combineLatest, filter } from 'rxjs';
-import { FileService } from './file.service';
+import { Observable, combineLatest, filter, fromEvent } from 'rxjs';
+import { KmeansService } from './kmeans.service';
+import { AppStoreService } from './app.store.service';
+import { KmeansImage } from '../models/processedImage';
+import { FixedArray } from '../models/fixed-array';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ImageService {
-  rawImageContext2D = new ReplaySubject<CanvasRenderingContext2D>(0);
-  rawImage = new BehaviorSubject<FileData | null>(null);
-  clusteredImage = new BehaviorSubject<FileData | null>(null);
   readonly IDENTITY_TRANSFORM = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 
   constructor(
-    private appService: AppService,
-    private fileService: FileService,
+    private storeService: AppStoreService,
+    private kmeansService: KmeansService,
   ) {
-    this.appService.reset.subscribe(this.onReset.bind(this));
     combineLatest([
-      this.rawImageContext2D,
-      this.fileService.rawFileData.pipe(filter((fileData) => fileData != null)), 
+      this.storeService.rawImageContext2D.pipe(filter((context) => context != null)),
+      this.storeService.displayedImage.pipe(filter((image) => image != null)), 
     ]).subscribe((args) => {
-      const [context, fileData] = args;
-      this.updateImage(context, fileData!);
+      const [context, image] = args;
+      this.updateCanvasImage(context!, image!);
     });
   }
 
-  public updateImage(context: CanvasRenderingContext2D, fileData: FileData) {
-    this.drawImage(context, fileData);
-    var imageData: ImageData = this.getImageData(context);
-    fileData.rawImageData = imageData;
-    this.rawImage.next(fileData);
+  useCanvas<T>(context: CanvasRenderingContext2D, callback: (context: CanvasRenderingContext2D) => T): T {
+    var imageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+    var currentTransform = this.resizeCanvasToIdentity(context)
+    var returnObj = callback(context);
+    context.setTransform(currentTransform);
+    context.putImageData(imageData, 0, 0);
+    return returnObj;
+  }
+  
+  createImageFromPixels(context: CanvasRenderingContext2D, pixels: Pixel[][]): Observable<HTMLImageElement> {
+    return this.useCanvas(context, (context) => {
+      var { dataUrl } = this.drawPixels(context, pixels);
+      var imageObservable = this.createImage(dataUrl);
+      return imageObservable
+    });
   }
 
-  private imageDataToPixels(imageData: ImageData): Pixel[] {
+  getImageData(context: CanvasRenderingContext2D): { imageData: ImageData, dataUrl: string} {
+    return this.useCanvas(context, (context) => {
+      var imageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+      var dataUrl = context.canvas.toDataURL();
+      return { imageData, dataUrl };
+    })
+  }
+
+  createImage(dataUrl: string): Observable<HTMLImageElement> {
+    return new Observable((subscriber) => {
+      var image = new Image();
+      image.onload = () => {
+        subscriber.next(image);
+        subscriber.complete();
+      };
+      image.src = dataUrl;
+    });;
+  }
+
+  public updateCanvasImage(context: CanvasRenderingContext2D, image: HTMLImageElement) {
+    this.drawImage(context, image);
+    var { imageData } = this.getImageData(context);
+    this.storeService.rawImageData.set(imageData);
+  }
+
+  public imageDataToPixels(imageData: ImageData): Pixel[] {
     var pixels: Pixel[] = [];
     imageData.data.forEach((_, i) => {
       if (i % 4 == 0) {
@@ -45,62 +77,56 @@ export class ImageService {
     return pixels;
   }
 
-  getImageData(context: CanvasRenderingContext2D): ImageData {
-    var currentImageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
-    var currentTransform = context.getTransform();
-    context.setTransform(this.IDENTITY_TRANSFORM);
-    var unalteredImageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
-    context.setTransform(currentTransform);
-    context.putImageData(currentImageData, 0, 0);
-    return unalteredImageData;
-  }
-
-  drawImage(context: CanvasRenderingContext2D, fileData: FileData) {
+  predraw(context: CanvasRenderingContext2D, resizeWidth: number, resizeHeight: number) {
     this.clearContext(context);
-    this.resizeCanvas(context, fileData);
+    this.resizeCanvas(context, resizeWidth, resizeHeight);
     context.imageSmoothingEnabled = false;
-    context.drawImage(fileData.image, 0, 0, context.canvas.width, context.canvas.height);
+  }
+  
+  drawImage(context: CanvasRenderingContext2D, image: HTMLImageElement) {
+    this.predraw(context, image.width, image.height);
+    context.drawImage(image, 0, 0, context.canvas.width, context.canvas.height);
+  }
+  
+  drawImageData(context: CanvasRenderingContext2D, image: ImageData, width: number, height: number) {
+    this.predraw(context, width, height);
+    context.putImageData(image, 0, 0);
   }
 
-  // drawImageData(context: CanvasRenderingContext2D, imageData: ImageData) {
-  //   this.clearContext(context);
-  //   this.resizeCanvas(context, imageData);
-  //   context.putImageData(imageData, 0, 0);
-  // }
+  drawPixels(context: CanvasRenderingContext2D, pixels: Pixel[][]) {
+    var imageData = context.createImageData(context.canvas.width, context.canvas.height);
+    if (pixels.length == 0) {
+      return { imageData, dataUrl: "" }
+    }
+    pixels.forEach((pixelRow, i) => {
+      pixelRow.forEach((pixel, j) => {
+        pixel.forEach((value, k) => {
+          var index = (i * pixelRow.length + j) * pixel.length + k;
+          imageData.data[index] = value;
+        });
+      });
+    });
+    var width = pixels[0].length;
+    var height = pixels.length;
+    this.predraw(context, width, height);
+    var dataUrl = context.canvas.toDataURL();
+    context.putImageData(imageData, 0, 0);
+    return { imageData, dataUrl }
+  }
 
   clearContext(context: CanvasRenderingContext2D) {
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
   }
 
-  resizeCanvas(context: CanvasRenderingContext2D, image: FileData | ImageData) {
+  resizeCanvas(context: CanvasRenderingContext2D, width: number, height: number) {
     var transform = context.getTransform();
-    if (image instanceof FileData) {
-      var width = image.image.width;
-      var height = image.image.height;
-    }
-    else {
-      var width = image.width;
-      var height = image.height;
-    }
     context.canvas.width = width * transform.a;
     context.canvas.height = height * transform.d;
   }
 
-  getOutputFilename(filename: string, index: number) {
-    return `${filename}_layer_${index}.png`;
-  }
-
-  getAveragePixel(pixels: Pixel[], ignoreValue: Pixel): Pixel {
-    var averagePixel = pixels.reduce((curPixel, prevPixel, i) => {
-      if (curPixel != ignoreValue) {
-        return prevPixel.add(curPixel);
-      }
-      return prevPixel;
-    }).divide(pixels.length);
-    return averagePixel
-  }
-
-  onReset() {
-    this.rawImage.next(null);
+  resizeCanvasToIdentity(context: CanvasRenderingContext2D) {
+    var transform = context.getTransform();
+    context.setTransform(this.IDENTITY_TRANSFORM);
+    return transform;
   }
 }
