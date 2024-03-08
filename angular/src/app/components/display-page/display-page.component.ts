@@ -27,8 +27,9 @@ import { KmeansImage } from '../../models/processedImage';
   ],
 })
 export class DisplayPageComponent {
+  displayedImage = this.storeService.displayedImage;
   hasImageData = computed<boolean>(() => {
-    return this.storeService.rawImageFile() != null;
+    return this.displayedImage() != null;
   });
   sliderValue = computed<number>(() => {
     return this.sliderRawValue() * this.sliderMultiplier();
@@ -44,21 +45,14 @@ export class DisplayPageComponent {
 
   ngOnInit() {
     this.storeService.reset.subscribe(this.onReset.bind(this));
-    this.storeService.kmeansImage.subscribe(this.onKmeansImagesCreated.bind(this));
   }
 
   onRawImageCanvasContextReady(context: CanvasRenderingContext2D | null) {
     if (context == null) {
       return;
     }
-    this.storeService.rawImageContext2D.next(context)
-  }
-
-  onKmeansImageCanvasContextReady(context: CanvasRenderingContext2D | null) {
-    if (context == null) {
-      return;
-    }
-    this.storeService.kmeansImageContext2D.next(context)
+    this.storeService.context2D.set(context)
+    this.storeService.onContext2DReady.next();
   }
 
   protected onSliderChange(value: number) {
@@ -77,15 +71,5 @@ export class DisplayPageComponent {
 
   protected formatSliderLabel(value: number) {
     return `${(value * 100).toFixed(0)}%`;
-  }
-
-  onKmeansImagesCreated(kmeansImage: KmeansImage | null) {
-    if (kmeansImage == null) {
-      return;
-    }
-    kmeansImage.imagesLoaded$.subscribe(() => {
-      var kmeansImage = this.storeService.kmeansImage.getValue();
-      var labeledColorsImage = kmeansImage?.labeledColorsImage.getValue();
-    });
   }
 }

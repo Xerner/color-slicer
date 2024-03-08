@@ -18,20 +18,23 @@ import { FixedArray } from '../../../models/fixed-array';
   ],
 })
 export class DisplayCanvasComponent {
-  imageData = input<HTMLImageElement | ImageData | null>();
-  size = input<FixedArray<number, 2> | null>();
+  image = input<HTMLImageElement | null>();
+  size = computed<FixedArray<number, 2> | null>(() => {
+    var image = this.image();
+    if (image == null) {
+      return null;
+    }
+    return [image.width, image.height];
+  });
   scale = input<number>(1);
   protected hasImageData = computed<boolean>(() => {
-    return this.imageData() != null;
+    return this.image() != null;
   });
-  onScaleChange = effect(() => {
+
+  onImageOrScaleUpdate = effect(() => {
     if (!this.hasImageData()) {
       return;
     }
-    this.redrawImage();
-  })
-  
-  onImageDataUpdate = effect(() => {
     this.redrawImage();
   });
 
@@ -41,7 +44,6 @@ export class DisplayCanvasComponent {
 
   @Output()
   context = new BehaviorSubject<CanvasRenderingContext2D | null>(null);
-  _context!: CanvasRenderingContext2D;
 
   @ViewChild('canvas') 
   set canvasRef(element: ElementRef<HTMLCanvasElement>) {
@@ -64,21 +66,21 @@ export class DisplayCanvasComponent {
     if (context == null) {
       return;
     }
-    var imageData = this.imageData();
-    if (imageData == null) {
+    var image = this.image();
+    if (image == null) {
       return;
     }
     var imageScale = this.scale();
     context.scale(imageScale, imageScale);
-    if (imageData instanceof HTMLImageElement) {
-      this.imageService.drawImage(context, imageData);
+    if (image instanceof HTMLImageElement) {
+      this.imageService.drawImage(context, image);
     } else {
       var size = this.size();
       if (size == null) {
         console.error("No size provided for image data")
         return;
       }
-      this.imageService.drawImageData(context, imageData, ...size);
+      this.imageService.drawImageData(context, image, ...size);
     }
   }
 

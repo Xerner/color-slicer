@@ -76,7 +76,7 @@ export class UserInputPageComponent {
   }
 
   generateKmeansImages() {
-    var rawImageData = this.storeService.rawImageData()
+    var rawImageData = this.storeService.rawImage()
     if (rawImageData == null) {
       throw new Error("No image file")
     }

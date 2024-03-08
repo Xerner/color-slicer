@@ -18,13 +18,15 @@ export class FileService {
     fileReader.onload = (event) => {
       var dataUrl = event.target?.result as string;
       this.imageService.createImage(dataUrl).subscribe((image) => {
-        this.storeService.rawImageFile.set(image);
+        this.storeService.rawImage.set(image);
+        this.storeService.displayedImage.set(image);
+        this.storeService.onImageLoaded.next();
       })
     };
     fileReader.readAsDataURL(file);
   }
 
   onReset() {
-    this.storeService.rawImageFile.set(null);
+    this.storeService.rawImage.set(null);
   }
 }

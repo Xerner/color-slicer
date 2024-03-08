@@ -17,8 +17,8 @@ export class ImageService {
     private kmeansService: KmeansService,
   ) {
     combineLatest([
-      this.storeService.rawImageContext2D.pipe(filter((context) => context != null)),
-      this.storeService.displayedImage.pipe(filter((image) => image != null)), 
+      this.storeService.onContext2DReady.pipe(filter((context) => context != null)),
+      this.storeService.onImageLoaded.pipe(filter((image) => image != null)), 
     ]).subscribe((args) => {
       const [context, image] = args;
       this.updateCanvasImage(context!, image!);
@@ -34,7 +34,7 @@ export class ImageService {
     return returnObj;
   }
   
-  createImageFromPixels(context: CanvasRenderingContext2D, pixels: Pixel[][]): Observable<HTMLImageElement> {
+  createImageFromPixels(context: CanvasRenderingContext2D, pixels: Pixel[][]): Observable<HTMLImageElement | null> {
     return this.useCanvas(context, (context) => {
       var { dataUrl } = this.drawPixels(context, pixels);
       var imageObservable = this.createImage(dataUrl);
@@ -50,8 +50,13 @@ export class ImageService {
     })
   }
 
-  createImage(dataUrl: string): Observable<HTMLImageElement> {
+  createImage(dataUrl: string): Observable<HTMLImageElement | null> {
     return new Observable((subscriber) => {
+      if (dataUrl == "") {
+        subscriber.next(null);
+        subscriber.complete();
+        return;
+      }
       var image = new Image();
       image.onload = () => {
         subscriber.next(image);
@@ -63,8 +68,6 @@ export class ImageService {
 
   public updateCanvasImage(context: CanvasRenderingContext2D, image: HTMLImageElement) {
     this.drawImage(context, image);
-    var { imageData } = this.getImageData(context);
-    this.storeService.rawImageData.set(imageData);
   }
 
   public imageDataToPixels(imageData: ImageData): Pixel[] {

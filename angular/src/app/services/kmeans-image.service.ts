@@ -1,4 +1,4 @@
-import { first } from "rxjs";
+import { Observable, first, map, merge } from "rxjs";
 import { FixedArray } from "../models/fixed-array";
 import { Pixel } from "../models/pixel";
 import { KmeansImage } from "../models/processedImage";
@@ -45,29 +45,33 @@ export class KmeansImageService {
     return { labelColor, colorLayer }
   }
 
-  generateKmeansImages(imageData: ImageData, clusters: number, iterations: number, maskValue: number) {
-    var kmeansImage = this.createKmeansImage(imageData, clusters, iterations, maskValue);
-    var context = this.storeService.rawImageContext2D.getValue();
-    if (context == null) {
+  generateKmeansImages(image: HTMLImageElement, clusters: number, iterations: number, maskValue: number) {
+    var context2D = this.storeService.context2D();
+    if (context2D == null) {
       throw new Error("No context")
     }
-    this.loadKmeansImages(context, kmeansImage);
-    kmeansImage.imagesLoaded$.pipe(first()).subscribe(() => {
-      this.storeService.kmeansImage.next(kmeansImage);
-    });
+    this.imageService.drawImage(context2D, image);
+    var { imageData } = this.imageService.getImageData(context2D);
+    this.resetImages();
+    var kmeansImage = this.createKmeansImage(imageData, clusters, iterations, maskValue);
+    this.loadKmeansImages(context2D, kmeansImage);
   }
 
-  loadKmeansImages(context: CanvasRenderingContext2D, kmeansImage: KmeansImage) {
-    var { dataUrl } = this.imageService.drawPixels(context, kmeansImage.labeledColors2D());
-    this.imageService.createImage(dataUrl).subscribe((image) => {
-      kmeansImage.labeledColorsImage.next(image);
+  loadKmeansImages(context: CanvasRenderingContext2D, processedImage: KmeansImage) {
+    var observables = Object.keys(processedImage.colorLayers).map((label) => {
+      var { dataUrl } = this.imageService.drawPixels(context, processedImage.colorLayer2D(label));
+      return this.imageService.createImage(dataUrl).pipe(map(image => ({ label: label.toString(), image })))
     });
-    kmeansImage.labels.forEach((label) => {
-      var { dataUrl } = this.imageService.drawPixels(context, kmeansImage.colorLayer2D(label.toString()));
-      this.imageService.createImage(dataUrl).subscribe((image) => {
-        kmeansImage.colorLayersImages[label].next(image);
-      });
-    });
+    merge(...observables).subscribe({
+      next: (imageAndLabel) => {
+        processedImage.colorLayersImages.push(imageAndLabel)
+      },
+      complete: () => {
+        this.storeService.processedImage.set(processedImage);
+        var imageList = processedImage.toImageList().sort((a, b) => a.label.localeCompare(b.label));
+        this.storeService.images.set(imageList)
+      }
+    })
   }
 
   getAveragePixel(pixels: Pixel[], ignoreValue: Pixel): Pixel {
@@ -79,4 +83,10 @@ export class KmeansImageService {
     }).divide(pixels.length) as Pixel;
     return averagePixel;
   }  
+
+  resetImages() {
+    this.storeService.processedImage.set(null);
+    this.storeService.displayedImage.set(null);
+    this.storeService.images.set([]);
+  }
 }

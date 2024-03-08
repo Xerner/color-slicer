@@ -1,7 +1,7 @@
 <div class="shadow-inner bg-slate-300 w-full h-full flex flex-col">
   <app-display-canvas 
     class="grow"
-    [imageData]="storeService.rawImageFile()"
+    [image]="displayedImage()"
     [scale]="sliderValue()"
     (context)="onRawImageCanvasContextReady($event)"></app-display-canvas>
   <mat-toolbar class="gap-x-3">

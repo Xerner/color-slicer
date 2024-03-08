@@ -2,11 +2,14 @@ import { FixedArray } from "./fixed-array";
 import { Pixel } from "./pixel";
 import { BehaviorSubject, Subject, combineLatest } from "rxjs";
 
+export interface ImageAndLabel {
+  label: string;
+  image: HTMLImageElement | null;
+}
+
 export class KmeansImage {
-  labeledColorsImage = new BehaviorSubject<HTMLImageElement | null>(null);
-  colorLayersImages: Record<number, BehaviorSubject<HTMLImageElement | null>> = {};
-  private imagesLoaded = new Subject<void>();
-  imagesLoaded$ = this.imagesLoaded.asObservable();
+  readonly RAW_IMAGE_KEY = 'raw';
+  colorLayersImages: ImageAndLabel[] = [];
 
   constructor(
     /** width, height */
@@ -17,28 +20,35 @@ export class KmeansImage {
     public labelColors: Pixel[],
     public colorLayers: Record<string, Pixel[]>,
   ) {
-    labels.forEach((label) => {
-      this.colorLayersImages[label] = new BehaviorSubject<HTMLImageElement | null>(null);
-    })
-    combineLatest([
-      this.labeledColorsImage, 
-      ...Object.values(this.colorLayersImages)
-    ]).subscribe((images) => {
-      if (images.some((image) => image != null)) {
-        this.imagesLoaded.next();
+    colorLayers[this.RAW_IMAGE_KEY] = labelColors;
+  }
+
+  toImageList(): ImageAndLabel[] {
+    var imagesAndLabels: ImageAndLabel[] = [];
+    this.colorLayersImages.forEach((imageAndLabel) => {
+      if (imageAndLabel.label == this.RAW_IMAGE_KEY) {
+        imagesAndLabels.push({ label: "Full Processed Image", image: imageAndLabel.image });
+        return;
       }
+      var label = `Color Layer ${imageAndLabel.label}`;
+      if (imageAndLabel.image == null) {
+        label += " (Empty)"
+      }
+      imagesAndLabels.push({ label: `Color Layer ${imageAndLabel.label}`, image: imageAndLabel.image });
     })
+    return imagesAndLabels;
   }
 
   labeledColors2D() {
-    return this.to2D(this.labelColors, this.size[0]);
+    return this.to2D(this.labelColors);
   }
 
-  colorLayer2D(key: string) {
-    return this.to2D(this.colorLayers[key], this.size[0]);
+  colorLayer2D(layerLabel: string) {
+    return this.to2D(this.colorLayers[layerLabel]);
   }
 
-  private to2D<T>(array: T[], width: number) {
+  private to2D<T>(array: T[]) {
+    var width = this.size[0];
     if (array == undefined) {
       return [];
     }

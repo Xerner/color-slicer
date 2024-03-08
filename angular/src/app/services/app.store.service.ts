@@ -1,6 +1,6 @@
 import { Injectable, WritableSignal, signal } from "@angular/core";
 import { BehaviorSubject, Subject } from "rxjs";
-import { KmeansImage } from "../models/processedImage";
+import { ImageAndLabel, KmeansImage } from "../models/processedImage";
 
 @Injectable({
   providedIn: 'root'
@@ -8,13 +8,13 @@ import { KmeansImage } from "../models/processedImage";
 export class AppStoreService {
   reset = new Subject<void>();
   
-  displayedImage = new BehaviorSubject<HTMLImageElement | null>( null);
-  images: Record<string, WritableSignal<HTMLImageElement>> = {};
+  images = signal<ImageAndLabel[]>([]);
+  rawImage = signal<HTMLImageElement | null>(null);
+  processedImage = signal<KmeansImage | null>(null);
+  displayedImage = signal<HTMLImageElement | null>(null);
+  
+  context2D = signal<CanvasRenderingContext2D | null>(null);
 
-  kmeansImage = new BehaviorSubject<KmeansImage | null>(null);
-  rawImageFile = signal<HTMLImageElement | null>(null);
-  rawImageData = signal<ImageData | null>(null);
-
-  rawImageContext2D = new BehaviorSubject<CanvasRenderingContext2D | null>(null);
-  kmeansImageContext2D = new BehaviorSubject<CanvasRenderingContext2D | null>(null);
+  onImageLoaded = new Subject<void>();
+  onContext2DReady = new Subject<void>();
 }
