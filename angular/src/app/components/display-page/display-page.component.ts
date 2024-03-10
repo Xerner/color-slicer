@@ -10,7 +10,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { KmeansImage } from '../../models/processedImage';
+import { ProcessedImage } from '../../models/processedImage';
 
 @Component({
   selector: 'app-display-page',

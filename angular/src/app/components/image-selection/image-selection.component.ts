@@ -23,7 +23,7 @@ export class ImageSelectionComponent {
   images = computed<MatListOptionArgs[]>(() => {
     var images = this.storeService.images();
     var matListOptions = images.map((imageAndLabel) => {
-      return { name: imageAndLabel.label, value: imageAndLabel.image, disabled: imageAndLabel.image == null }
+      return { name: imageAndLabel.displayLabel, value: imageAndLabel.image, disabled: imageAndLabel.image == null }
     })
     return matListOptions;
   });

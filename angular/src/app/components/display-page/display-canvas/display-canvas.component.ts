@@ -72,16 +72,7 @@ export class DisplayCanvasComponent {
     }
     var imageScale = this.scale();
     context.scale(imageScale, imageScale);
-    if (image instanceof HTMLImageElement) {
-      this.imageService.drawImage(context, image);
-    } else {
-      var size = this.size();
-      if (size == null) {
-        console.error("No size provided for image data")
-        return;
-      }
-      this.imageService.drawImageData(context, image, ...size);
-    }
+    this.imageService.drawImage(context, image);
   }
 
   protected getCanvasClass() {

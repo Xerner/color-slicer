@@ -12,6 +12,7 @@ import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 import { KmeansService } from '../../services/kmeans.service';
 import { ImageService } from '../../services/image.service';
 import { KmeansImageService } from '../../services/kmeans-image.service';
+import { ProcessedImage } from '../../models/processedImage';
 
 @Component({
   selector: 'app-user-input-page',
@@ -88,6 +89,8 @@ export class UserInputPageComponent {
     if (iterations == null) {
       throw new Error("No iterations")
     }
-    this.kmeansImageService.generateKmeansImages(rawImageData, clusters, iterations, 0);
+    this.kmeansImageService.generateKmeansImages(rawImageData, clusters, iterations, null);
   }
+
+  
 }

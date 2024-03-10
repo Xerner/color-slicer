@@ -3,8 +3,9 @@ import { Pixel } from '../models/pixel';
 import { Observable, combineLatest, filter, fromEvent } from 'rxjs';
 import { KmeansService } from './kmeans.service';
 import { AppStoreService } from './app.store.service';
-import { KmeansImage } from '../models/processedImage';
+import { ProcessedImage } from '../models/processedImage';
 import { FixedArray } from '../models/fixed-array';
+import { ArrayService } from './arrays.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,8 @@ export class ImageService {
   constructor(
     private storeService: AppStoreService,
     private kmeansService: KmeansService,
-  ) {
+    private arrayService: ArrayService,
+    ) {
     combineLatest([
       this.storeService.onContext2DReady.pipe(filter((context) => context != null)),
       this.storeService.onImageLoaded.pipe(filter((image) => image != null)), 
@@ -48,6 +50,13 @@ export class ImageService {
       var dataUrl = context.canvas.toDataURL();
       return { imageData, dataUrl };
     })
+  }
+
+  getImageDataFromImage(context2D: CanvasRenderingContext2D, image: HTMLImageElement): ImageData {
+    this.drawImage(context2D, image);
+    var { imageData } = this.getImageData(context2D);
+    this.resetImages();
+    return imageData;
   }
 
   createImage(dataUrl: string): Observable<HTMLImageElement | null> {
@@ -131,5 +140,11 @@ export class ImageService {
     var transform = context.getTransform();
     context.setTransform(this.IDENTITY_TRANSFORM);
     return transform;
+  }
+
+  resetImages() {
+    this.storeService.processedImage.set(null);
+    this.storeService.displayedImage.set(null);
+    this.storeService.images.set([]);
   }
 }
