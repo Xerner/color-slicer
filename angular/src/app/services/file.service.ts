@@ -9,34 +9,29 @@ import { ProcessedImageStore } from "./stores/processed-image.store.service";
 })
 export class FileService {
   constructor(
-    private imageStore: CanvasStore,
+    private canvasStore: CanvasStore,
+    private canvasService: CanvasService,
     private processedImageStore: ProcessedImageStore,
-    private imageService: CanvasService,
   ) {
-    this.imageStore.reset.subscribe(this.onReset.bind(this));
   }
 
   updateFileData(file: File): void {
     var fileReader = new FileReader();
     fileReader.onload = (event) => {
       var dataUrl = event.target?.result as string;
-      this.imageService.createImage(dataUrl).subscribe((image) => {
-        this.imageStore.rawImage.set(image);
+      this.canvasService.createImage(dataUrl).subscribe((image) => {
+        this.canvasStore.rawImage.set(image);
         var imageDisplayInfo: ImageDisplayInfo = {
           displayLabel: file.name,
           image: image,
           label: null
         }
-        this.imageStore.displayedImage.set(imageDisplayInfo);
+        this.canvasStore.displayedImage.set(imageDisplayInfo);
         this.processedImageStore.reset();
         this.processedImageStore.originalImage.set({ ...this.processedImageStore.originalImage(), image: image });
-        this.imageStore.onImageLoaded.next();
+        this.canvasStore.onImageLoaded.next();
       })
     };
     fileReader.readAsDataURL(file);
-  }
-
-  onReset() {
-    this.imageStore.rawImage.set(null);
   }
 }

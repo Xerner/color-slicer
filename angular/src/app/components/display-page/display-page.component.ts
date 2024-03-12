@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { DisplayCanvasComponent } from './display-canvas/display-canvas.component';
 import { CanvasStore } from '../../services/stores/canvas.store.service';
@@ -25,7 +25,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 })
 export class DisplayPageComponent {
   displayedImage = computed(() => {
-    var displayedImage = this.storeService.displayedImage();
+    var displayedImage = this.canvasStore.displayedImage();
     if (displayedImage == null) {
       return null;
     }
@@ -35,41 +35,35 @@ export class DisplayPageComponent {
     return this.displayedImage() != null;
   });
   sliderValue = computed<number>(() => {
-    return this.sliderRawValue() * this.sliderMultiplier();
+    return this.canvasStore.sliderRawValue() * this.canvasStore.sliderMultiplier();
   });
-  sliderRawValue = signal<number>(1);
-  sliderMultiplier = signal<number>(1);
 
   constructor(
-    protected storeService: CanvasStore,
-    protected imageService: CanvasService,
+    protected canvasStore: CanvasStore,
+    protected canvasService: CanvasService,
     protected fileService: FileService,
   ) {}
-
-  ngOnInit() {
-    this.storeService.reset.subscribe(this.onReset.bind(this));
-  }
 
   onRawImageCanvasContextReady(context: CanvasRenderingContext2D | null) {
     if (context == null) {
       return;
     }
-    this.storeService.context2D.set(context)
-    this.storeService.onContext2DReady.next();
+    this.canvasStore.context2D.set(context)
+    this.canvasStore.onContext2DReady.next();
   }
 
   protected onSliderChange(value: number) {
-    this.sliderRawValue.set(value);
+    this.canvasStore.sliderRawValue.set(value);
   }
 
   protected onSliderMultiplierChange(event: Event) {
     var value = (event.target as HTMLInputElement).value;
-    this.sliderMultiplier.set(parseFloat(value));
+    this.canvasStore.sliderMultiplier.set(parseFloat(value));
   }
 
   protected onReset() {
-    this.sliderRawValue.set(1);
-    this.sliderMultiplier.set(1);
+    this.canvasStore.sliderRawValue.set(1);
+    this.canvasStore.sliderMultiplier.set(1);
   }
 
   protected formatSliderLabel(value: number) {

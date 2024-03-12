@@ -11,6 +11,8 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 import { KmeansImageService } from '../../services/kmeans-image.service';
 import { LoadingBarComponent } from '../loading-bar/loading-bar.component';
+import { ProcessedImageStore } from '../../services/stores/processed-image.store.service';
+import { KMeansFormService } from '../../services/stores/kmeans-form.service';
 
 @Component({
   selector: 'app-user-input-page',
@@ -37,21 +39,19 @@ export class UserInputPageComponent {
   fileForm = new FormGroup({
     file: new FormControl<File | null>(null, Validators.required),
   });
-  kmeansForm = new FormGroup({
-    clusters: new FormControl<number | null>(null, Validators.required),
-    iterations: new FormControl<number>(10, Validators.required),
-  });
 
-  @ViewChild(MatStepper, { static: true }) stepper!: MatStepper;
+  @ViewChild(MatStepper, { static: true }) 
+  stepper!: MatStepper;
 
   constructor(
-    private storeService: CanvasStore,
+    private canvasStore: CanvasStore,
+    private processedImageStore: ProcessedImageStore,
     private fileService: FileService,
     private kmeansImageService: KmeansImageService,
+    protected kmeansForm: KMeansFormService,
   ) { }
 
   ngOnInit() {
-    this.storeService.reset.subscribe(this.onReset.bind(this));
     this.fileForm.controls.file.valueChanges.subscribe(this.handleFileChange.bind(this));
   }
 
@@ -63,28 +63,26 @@ export class UserInputPageComponent {
   }
 
   reset() {
-    this.storeService.reset.next();
-  }
-
-  onReset() {
+    this.canvasStore.reset();
+    this.processedImageStore.reset();
     this.stepper.reset();
-    this.kmeansForm.controls.iterations.setValue(10);
+    this.kmeansForm.form.controls.iterations.setValue(10);
   }
 
   isReadyForKmeans() {
-    return this.kmeansForm.valid;
+    return this.kmeansForm.form.valid;
   }
 
   generateKmeansImages() {
-    var rawImageData = this.storeService.rawImage()
+    var rawImageData = this.canvasStore.rawImage()
     if (rawImageData == null) {
       throw new Error("No image file")
     }
-    var clusters = this.kmeansForm.controls.clusters.value
+    var clusters = this.kmeansForm.form.controls.clusters.value
     if (clusters == null) {
       throw new Error("No clusters")
     }
-    var iterations = this.kmeansForm.controls.iterations.value
+    var iterations = this.kmeansForm.form.controls.iterations.value
     if (iterations == null) {
       throw new Error("No iterations")
     }

@@ -4,7 +4,7 @@
   <button mat-icon-button matPrefix class="px-3">
     <mat-icon>{{ icon() }}</mat-icon>
   </button>
-  <input type="text" readonly matInput [disabled]="disabled()" [formControl]="fileName" />
+  <input type="text" readonly matInput [formControl]="fileName" />
   <input
     type="file"
     hidden

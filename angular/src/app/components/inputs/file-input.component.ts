@@ -26,7 +26,7 @@ export class FileInputComponent implements ControlValueAccessor {
   label = input("Upload");
   icon = input("attach_file");
   disabled = signal<boolean>(false);
-  fileName = new FormControl("", Validators.required);
+  fileName = new FormControl({ value: "", disabled: this.disabled() }, Validators.required);
   private onChange!: (file: File) => void;
   private onTouched!: () => void;
   
@@ -71,8 +71,6 @@ export class FileInputComponent implements ControlValueAccessor {
     this.fileName.patchValue(file.name);
     this.onChange(file);
   }
-
-  
 
   public onBlur(): void {
     this.onTouched();

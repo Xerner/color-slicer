@@ -50,7 +50,7 @@ export class DisplayCanvasComponent {
     if (element == undefined) { 
       return;
     }
-    var context = element.nativeElement.getContext('2d');
+    var context = element.nativeElement.getContext('2d', { willReadFrequently: true });
     if (context == null) {
       return;
     }

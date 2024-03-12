@@ -14,8 +14,8 @@
       </form>
     </mat-step>
   
-    <mat-step [stepControl]="kmeansForm" label="Define K-means parameters">
-      <form [formGroup]="kmeansForm" class="my-3 flex flex-col gap-y-3">
+    <mat-step [stepControl]="kmeansForm.form" label="Define K-means parameters">
+      <form [formGroup]="kmeansForm.form" class="my-3 flex flex-col gap-y-3">
         <mat-form-field class="w-full">
           <mat-label class="w-full">Number of Clusters</mat-label>
           <input matInput formControlName="clusters" class="w-full" type="number">

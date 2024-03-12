@@ -6,14 +6,21 @@ import { ImageDisplayInfo } from "../../models/ImageDisplayInfo";
   providedIn: 'root'
 })
 export class CanvasStore {
-  reset = new Subject<void>();
-  fullImages = signal<ImageDisplayInfo[]>([]);
-
-  rawImage = signal<HTMLImageElement | null>(null);
-  displayedImage = signal<ImageDisplayInfo | null>(null);
   context2D = signal<CanvasRenderingContext2D | null>(null);
   
+  rawImage = signal<HTMLImageElement | null>(null);
+  displayedImage = signal<ImageDisplayInfo | null>(null);
+  sliderRawValue = signal<number>(1);
+  sliderMultiplier = signal<number>(1);
+
   onImageProcessed = new Subject<ImageDisplayInfo>();
   onImageLoaded = new Subject<void>();
   onContext2DReady = new Subject<void>();
+
+  reset() {
+    this.rawImage.set(null);
+    this.displayedImage.set(null);
+    this.sliderRawValue.set(1);
+    this.sliderMultiplier.set(1);
+  }
 }
