@@ -1,6 +1,14 @@
 <div>
   <div>
-    {{ loadingStoreService.message() }}
+    {{ loadingStoreService.header() }}
+  </div>
+  <div class="flex justify-between">
+    <div>
+      {{ loadingStoreService.message() }}
+    </div>
+    <div>
+      {{ loadingStoreService.timer.time() }}
+    </div>
   </div>
   <mat-progress-bar mode="determinate" [value]="loadingStoreService.progress()"></mat-progress-bar>
 </div>

@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Vector } from '../models/Vector';
+import { LoadingService } from './loading.service';
+import { DateTime } from 'luxon';
 
 @Injectable({
   providedIn: 'root'
 })
 export class KmeansService {
-  constructor() { }
+  constructor(
+    private loadingService: LoadingService,
+  ) { }
 
   createMask<T>(array: T[], dontMask: T, maskValue: T): T[] {
     var mask = array.map(value => value === dontMask ? value : maskValue);
@@ -23,9 +27,9 @@ export class KmeansService {
     var labeledData = this.getLabeledData(distances)
 
     // Learnin time
+    this.loadingService.updateHeader("Generating Kmeans Clusters");
+    this.loadingService.resetTime();
     for (let i = 0; i < epochs; i++) {
-      console.log(`Epoch ${i}\t ${new Date().getTime().toFixed(2)} sec`)
-
       // We re-calculate our centroids every iteration
       centroids = []
       for (let j = 0; j < clusters; j++) {
@@ -44,6 +48,10 @@ export class KmeansService {
 
       distances = this.getDistancesFromCentroids(data, centroids, this.euclideanDistance)
       labeledData = this.getLabeledData(distances)
+
+      // var timePassed = Math.abs(time.diffNow("milliseconds").milliseconds)
+      // this.loadingService.update(`Epoch ${i}, ${timePassed.toFixed(2)} sec`, i / epochs);
+      this.loadingService.update(`Epoch ${i}`, i / epochs);
     }
     var labels = new Set(labeledData)
     return { labels, labeledData, centroids }

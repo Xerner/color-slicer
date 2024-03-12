@@ -8,6 +8,7 @@ import { CanvasStore } from "./stores/canvas.store.service";
 import { ArrayService } from "./arrays.service";
 import { ImageDisplayInfo } from "../models/ImageDisplayInfo";
 import { LoadingService } from "./loading.service";
+import { CustomError } from "../models/CustomError";
 
 @Injectable({
   providedIn: 'root'
@@ -26,17 +27,16 @@ export class KmeansImageService {
   
   generateKmeansImages(image: HTMLImageElement, clusters: number, iterations: number, maskValue: number | null) {
     this.processedImageStore.reset();
-    this.loadingService.update("Generating Kmeans Images", 50);
     var context2D = this.canvasStore.context2D();
     if (context2D == null) {
-      throw new Error("No context")
+      throw new CustomError("No context")
     }
     var imageData = this.imageService.getImageDataFromImage(context2D, image);
-    var kmeansImage = this.createKmeansImages(image, imageData, clusters, iterations, maskValue);
-    this.loadKmeansImages(context2D, kmeansImage).subscribe(() => {
+    var processedImage = this.createKmeansImages(image, imageData, clusters, iterations, maskValue);
+    this.loadKmeansImages(context2D, processedImage).subscribe(() => {
       var processedImage = this.processedImageStore.processedImage;
       if (processedImage === undefined) {
-        throw new Error("Processed image not found");
+        throw new CustomError("Processed image not found");
       }
       this.canvasStore.displayedImage.set(processedImage());
       this.canvasStore.onImageProcessed.next(processedImage());
@@ -45,11 +45,12 @@ export class KmeansImageService {
 
   private createKmeansImages(image: HTMLImageElement, imageData: ImageData, clusters: number, iterations: number, maskValue: number | null) {
     if (imageData == null) {
-      throw new Error("No image data")
+      throw new CustomError("No image data")
     }
     var pixels = this.imageService.imageDataToPixels(imageData)
     var { labels, labeledData: labeledColors, centroids } = this.kmeansService.kmeans(pixels, clusters, iterations)
     var processedImage = this.processedImageStore.initialize(image, centroids as Pixel[], labels)
+    this.loadingService.update("Generating Color Layers", 0);
     for (let i = 0; i < clusters; i++) {
       var label = labels.has(i) ? i : null;
       if (label == null) {
@@ -60,6 +61,7 @@ export class KmeansImageService {
       var { labelColor, colorLayer } = this.createColorLayer(pixels, labelMask, label)
       processedImage.labelColors.set(label, labelColor)
       processedImage.colorLayers[label] = colorLayer
+      this.loadingService.update(`Generated Color Layer ${i + 1}`, (i + 1) / clusters);
     }
     processedImage.processedImagePixels = labeledColors.map(label => processedImage.labelColors.get(label)!);
     return processedImage;

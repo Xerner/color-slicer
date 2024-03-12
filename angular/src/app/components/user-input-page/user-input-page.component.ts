@@ -13,6 +13,7 @@ import { KmeansImageService } from '../../services/kmeans-image.service';
 import { LoadingBarComponent } from '../loading-bar/loading-bar.component';
 import { ProcessedImageStore } from '../../services/stores/processed-image.store.service';
 import { KMeansFormService } from '../../services/stores/kmeans-form.service';
+import { CustomError } from '../../models/CustomError';
 
 @Component({
   selector: 'app-user-input-page',
@@ -76,15 +77,15 @@ export class UserInputPageComponent {
   generateKmeansImages() {
     var rawImageData = this.canvasStore.rawImage()
     if (rawImageData == null) {
-      throw new Error("No image file")
+      throw new CustomError("No image file")
     }
     var clusters = this.kmeansForm.form.controls.clusters.value
     if (clusters == null) {
-      throw new Error("No clusters")
+      throw new CustomError("No clusters")
     }
     var iterations = this.kmeansForm.form.controls.iterations.value
     if (iterations == null) {
-      throw new Error("No iterations")
+      throw new CustomError("No iterations")
     }
     this.kmeansImageService.generateKmeansImages(rawImageData, clusters, iterations, null);
   }

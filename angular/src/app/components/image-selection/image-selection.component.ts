@@ -3,6 +3,7 @@ import { MatListModule, MatSelectionList, MatSelectionListChange } from "@angula
 import { CanvasStore } from "../../services/stores/canvas.store.service";
 import { ImageDisplayInfo } from "../../models/ImageDisplayInfo";
 import { ProcessedImageStore } from "../../services/stores/processed-image.store.service";
+import { CustomError } from "../../models/CustomError";
 
 export interface MatListOptionArgs {
   name: string;
@@ -46,7 +47,7 @@ export class ImageSelectionComponent {
     var selectedImage = selectionChange.source.selectedOptions.selected[0];
     var imageDisplayInfo = this.processedImageStore.allImages.find((imageAndLabel) => imageAndLabel.displayLabel === selectedImage.value.name);
     if (imageDisplayInfo === undefined) {
-      throw new Error("Image not found");
+      throw new CustomError("Image not found");
     }
     this.canvasService.displayedImage.set(imageDisplayInfo);
   }
