@@ -1,16 +1,19 @@
 import { Injectable } from "@angular/core";
-import { AppStoreService } from "./app.store.service";
-import { ImageService } from "./image.service";
+import { CanvasStore } from "./stores/canvas.store.service";
+import { CanvasService } from "./canvas.service";
+import { ImageDisplayInfo } from "../models/ImageDisplayInfo";
+import { ProcessedImageStore } from "./stores/processed-image.store.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class FileService {
   constructor(
-    private storeService: AppStoreService,
-    private imageService: ImageService,
+    private imageStore: CanvasStore,
+    private processedImageStore: ProcessedImageStore,
+    private imageService: CanvasService,
   ) {
-    this.storeService.reset.subscribe(this.onReset.bind(this));
+    this.imageStore.reset.subscribe(this.onReset.bind(this));
   }
 
   updateFileData(file: File): void {
@@ -18,15 +21,22 @@ export class FileService {
     fileReader.onload = (event) => {
       var dataUrl = event.target?.result as string;
       this.imageService.createImage(dataUrl).subscribe((image) => {
-        this.storeService.rawImage.set(image);
-        this.storeService.displayedImage.set(image);
-        this.storeService.onImageLoaded.next();
+        this.imageStore.rawImage.set(image);
+        var imageDisplayInfo: ImageDisplayInfo = {
+          displayLabel: file.name,
+          image: image,
+          label: null
+        }
+        this.imageStore.displayedImage.set(imageDisplayInfo);
+        this.processedImageStore.reset();
+        this.processedImageStore.originalImage.set({ ...this.processedImageStore.originalImage(), image: image });
+        this.imageStore.onImageLoaded.next();
       })
     };
     fileReader.readAsDataURL(file);
   }
 
   onReset() {
-    this.storeService.rawImage.set(null);
+    this.imageStore.rawImage.set(null);
   }
 }

@@ -4,7 +4,7 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
-import { AppStoreService } from "../../services/app.store.service";
+import { CanvasStore } from "../../services/stores/canvas.store.service";
 
 /**
  * https://stackblitz.com/edit/angular-material-file-input-with-form-field?file=src%2Fapp%2Fapp.component.ts

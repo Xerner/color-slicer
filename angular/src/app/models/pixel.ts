@@ -1,4 +1,4 @@
-import { Vector } from "./vector";
+import { Vector } from "./Vector";
 
 // I want this to be a fixed size array, but I can't figure out how to do that
 export class Pixel extends Vector {

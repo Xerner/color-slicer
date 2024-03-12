@@ -3,16 +3,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FileInputComponent } from '../inputs/file-input.component';
 import { MatButtonModule } from '@angular/material/button';
-import { AppStoreService } from '../../services/app.store.service';
+import { CanvasStore } from '../../services/stores/canvas.store.service';
 import { MatDividerModule } from '@angular/material/divider';
 import { FileService } from '../../services/file.service';
 import { MatStepper, MatStepperModule } from '@angular/material/stepper';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
-import { KmeansService } from '../../services/kmeans.service';
-import { ImageService } from '../../services/image.service';
 import { KmeansImageService } from '../../services/kmeans-image.service';
-import { ProcessedImage } from '../../models/processedImage';
+import { LoadingBarComponent } from '../loading-bar/loading-bar.component';
 
 @Component({
   selector: 'app-user-input-page',
@@ -25,6 +23,7 @@ import { ProcessedImage } from '../../models/processedImage';
     MatDividerModule,
     MatStepperModule,
     ReactiveFormsModule,
+    LoadingBarComponent,
   ],
   providers: [
     {
@@ -46,7 +45,7 @@ export class UserInputPageComponent {
   @ViewChild(MatStepper, { static: true }) stepper!: MatStepper;
 
   constructor(
-    private storeService: AppStoreService,
+    private storeService: CanvasStore,
     private fileService: FileService,
     private kmeansImageService: KmeansImageService,
   ) { }
@@ -91,6 +90,4 @@ export class UserInputPageComponent {
     }
     this.kmeansImageService.generateKmeansImages(rawImageData, clusters, iterations, null);
   }
-
-  
 }

@@ -1,22 +1,18 @@
 import { Injectable } from '@angular/core';
-import { Pixel } from '../models/pixel';
-import { Observable, combineLatest, filter, fromEvent } from 'rxjs';
+import { Pixel } from '../models/Pixel';
+import { Observable, combineLatest, filter } from 'rxjs';
 import { KmeansService } from './kmeans.service';
-import { AppStoreService } from './app.store.service';
-import { ProcessedImage } from '../models/processedImage';
-import { FixedArray } from '../models/fixed-array';
+import { CanvasStore } from './stores/canvas.store.service';
 import { ArrayService } from './arrays.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ImageService {
+export class CanvasService {
   readonly IDENTITY_TRANSFORM = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 
   constructor(
-    private storeService: AppStoreService,
-    private kmeansService: KmeansService,
-    private arrayService: ArrayService,
+    private storeService: CanvasStore,
     ) {
     combineLatest([
       this.storeService.onContext2DReady.pipe(filter((context) => context != null)),
@@ -121,8 +117,8 @@ export class ImageService {
     var width = pixels[0].length;
     var height = pixels.length;
     this.predraw(context, width, height);
-    var dataUrl = context.canvas.toDataURL();
     context.putImageData(imageData, 0, 0);
+    var dataUrl = context.canvas.toDataURL();
     return { imageData, dataUrl }
   }
 
@@ -143,8 +139,6 @@ export class ImageService {
   }
 
   resetImages() {
-    this.storeService.processedImage.set(null);
     this.storeService.displayedImage.set(null);
-    this.storeService.images.set([]);
   }
 }

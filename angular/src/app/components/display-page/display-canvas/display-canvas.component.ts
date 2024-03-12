@@ -1,9 +1,9 @@
 import { Component, ElementRef, Output, ViewChild, computed, effect, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { CenteredIconComponent } from '../../centered-icon/centered-icon.component';
-import { ImageService } from '../../../services/image.service';
+import { CanvasService } from '../../../services/canvas.service';
 import { BehaviorSubject } from 'rxjs';
-import { FixedArray } from '../../../models/fixed-array';
+import { FixedArray } from '../../../models/FixedArray';
 
 @Component({
   selector: 'app-display-canvas',
@@ -58,7 +58,7 @@ export class DisplayCanvasComponent {
   }
 
   constructor(
-    private imageService: ImageService,
+    private imageService: CanvasService,
   ) { }
 
   redrawImage() {

@@ -1,16 +1,13 @@
 import { Component, computed, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { DisplayCanvasComponent } from './display-canvas/display-canvas.component';
-import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs';
-import { AppStoreService } from '../../services/app.store.service';
+import { CanvasStore } from '../../services/stores/canvas.store.service';
 import { FileService } from '../../services/file.service';
-import { ImageService } from '../../services/image.service';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { CanvasService } from '../../services/canvas.service';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { ProcessedImage } from '../../models/processedImage';
 
 @Component({
   selector: 'app-display-page',
@@ -27,7 +24,13 @@ import { ProcessedImage } from '../../models/processedImage';
   ],
 })
 export class DisplayPageComponent {
-  displayedImage = this.storeService.displayedImage;
+  displayedImage = computed(() => {
+    var displayedImage = this.storeService.displayedImage();
+    if (displayedImage == null) {
+      return null;
+    }
+    return displayedImage.image;
+  });
   hasImageData = computed<boolean>(() => {
     return this.displayedImage() != null;
   });
@@ -38,8 +41,8 @@ export class DisplayPageComponent {
   sliderMultiplier = signal<number>(1);
 
   constructor(
-    protected storeService: AppStoreService,
-    protected imageService: ImageService,
+    protected storeService: CanvasStore,
+    protected imageService: CanvasService,
     protected fileService: FileService,
   ) {}
 

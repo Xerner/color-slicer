@@ -8,15 +8,15 @@ export class Vector extends Array<number> {
   }
 
   multiply(a: number): Vector {
-    return this.map((value, i) => value * a) as Vector;
+    return this.map((value) => value * a) as Vector;
   }
 
   divide(a: number): Vector {
-    return this.map((value, i) => value / a) as Vector;
+    return this.map((value) => value / a) as Vector;
   }
 
   pow(a: number): Vector {
-    return this.map((value, i) => Math.pow(value, a)) as Vector;
+    return this.map((value) => Math.pow(value, a)) as Vector;
   }
 
   sqrt(): Vector {

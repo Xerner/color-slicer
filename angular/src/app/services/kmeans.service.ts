@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Vector } from '../models/vector';
+import { Vector } from '../models/Vector';
 
 @Injectable({
   providedIn: 'root'
