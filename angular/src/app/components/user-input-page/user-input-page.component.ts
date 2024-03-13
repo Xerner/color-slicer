@@ -14,6 +14,7 @@ import { LoadingBarComponent } from '../loading-bar/loading-bar.component';
 import { ProcessedImageStore } from '../../services/stores/processed-image.store.service';
 import { KMeansFormService } from '../../services/stores/kmeans-form.service';
 import { CustomError } from '../../models/CustomError';
+import { CentroidSelectorComponent } from '../centroid-selector/centroid-selector.component';
 
 @Component({
   selector: 'app-user-input-page',
@@ -27,13 +28,14 @@ import { CustomError } from '../../models/CustomError';
     MatStepperModule,
     ReactiveFormsModule,
     LoadingBarComponent,
+    CentroidSelectorComponent,
   ],
-  providers: [
-    {
-      provide: STEPPER_GLOBAL_OPTIONS,
-      useValue: { showError: true }
-    }
-  ],
+  // providers: [
+  //   {
+  //     provide: STEPPER_GLOBAL_OPTIONS,
+  //     useValue: { showError: true }
+  //   }
+  // ],
   templateUrl: './user-input-page.component.html',
 })
 export class UserInputPageComponent {
@@ -41,8 +43,8 @@ export class UserInputPageComponent {
     file: new FormControl<File | null>(null, Validators.required),
   });
 
-  @ViewChild(MatStepper, { static: true }) 
-  stepper!: MatStepper;
+  // @ViewChild(MatStepper, { static: true }) 
+  // stepper!: MatStepper;
 
   constructor(
     private canvasStore: CanvasStore,
@@ -66,7 +68,7 @@ export class UserInputPageComponent {
   reset() {
     this.canvasStore.reset();
     this.processedImageStore.reset();
-    this.stepper.reset();
+    // this.stepper.reset();
     this.kmeansForm.form.controls.iterations.setValue(10);
   }
 

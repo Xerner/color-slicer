@@ -9,7 +9,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from "@angula
 })
 export class KMeansFormService {
   form = new FormGroup({
-    clusters: new FormControl<number | null>(null, Validators.required),
+    clusters: new FormControl<number>(4, Validators.required),
     iterations: new FormControl<number>(10, Validators.required),
   });
 }

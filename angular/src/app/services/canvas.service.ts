@@ -4,6 +4,7 @@ import { Observable, combineLatest, filter } from 'rxjs';
 import { KmeansService } from './kmeans.service';
 import { CanvasStore } from './stores/canvas.store.service';
 import { ArrayService } from './arrays.service';
+import { FixedArray } from '../models/FixedArray';
 
 @Injectable({
   providedIn: 'root'
@@ -12,11 +13,12 @@ export class CanvasService {
   readonly IDENTITY_TRANSFORM = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 
   constructor(
-    private storeService: CanvasStore,
+    private canvasStore: CanvasStore,
+    private arrayService: ArrayService,
     ) {
     combineLatest([
-      this.storeService.onContext2DReady.pipe(filter((context) => context != null)),
-      this.storeService.onImageLoaded.pipe(filter((image) => image != null)), 
+      this.canvasStore.onContext2DReady.pipe(filter((context) => context != null)),
+      this.canvasStore.onImageLoaded.pipe(filter((image) => image != null)), 
     ]).subscribe((args) => {
       const [context, image] = args;
       this.updateCanvasImage(context!, image!);
@@ -139,6 +141,17 @@ export class CanvasService {
   }
 
   resetImages() {
-    this.storeService.displayedImage.set(null);
+    this.canvasStore.displayedImage.set(null);
+  }
+
+  getColorAtPosition(position: FixedArray<number, 2>) {
+    var context = this.canvasStore.context2D();
+    if (context == null) {
+      return;
+    }
+    var imageData = this.getImageData(context).imageData;
+    var pixels2D = this.arrayService.to2D(this.imageDataToPixels(imageData), context.canvas.width);
+    var pixel = pixels2D[position[1]][position[0]]
+    return pixel;
   }
 }
