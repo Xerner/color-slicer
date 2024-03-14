@@ -4,6 +4,7 @@ import { CenteredIconComponent } from '../../centered-icon/centered-icon.compone
 import { CanvasService } from '../../../services/canvas.service';
 import { BehaviorSubject } from 'rxjs';
 import { FixedArray } from '../../../models/FixedArray';
+import { CanvasStore } from '../../../services/stores/canvas.store.service';
 
 @Component({
   selector: 'app-display-canvas',
@@ -58,7 +59,8 @@ export class DisplayCanvasComponent {
   }
 
   constructor(
-    private imageService: CanvasService,
+    private canvasService: CanvasService,
+    private canvasStore: CanvasStore,
   ) { }
 
   redrawImage() {
@@ -72,11 +74,14 @@ export class DisplayCanvasComponent {
     }
     var imageScale = this.scale();
     context.scale(imageScale, imageScale);
-    this.imageService.drawImage(context, image);
+    this.canvasService.drawImage(context, image);
   }
 
   protected getCanvasClass() {
     if (this.hasImageData()) {
+      if  (this.canvasStore.onMouseClick() != null) {
+        return this.SHOWN_CANVAS_CLASS + ' cursor-crosshair';
+      }
       return this.SHOWN_CANVAS_CLASS;
     }
     return this.HIDDEN_CLASS;

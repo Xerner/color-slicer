@@ -2,6 +2,7 @@ import { ImageDisplayInfo } from "../../models/ImageDisplayInfo";
 import { FixedArray } from "../../models/FixedArray";
 import { Pixel } from "../../models/Pixel";
 import { Injectable, computed, signal } from "@angular/core";
+import { Centroid } from "../../models/Centroid";
 
 @Injectable({
   providedIn: 'root'
@@ -20,6 +21,7 @@ export class ProcessedImageStore {
     image: null,
     label: null
   });
+  initialCentroids = signal<Pixel[]>([]);
   centroids: Pixel[] = [];
   labels: Set<number> = new Set();
   size: FixedArray<number, 2> = [0, 0];

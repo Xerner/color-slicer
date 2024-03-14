@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Pixel } from '../models/Pixel';
 import { Observable, combineLatest, filter } from 'rxjs';
-import { KmeansService } from './kmeans.service';
 import { CanvasStore } from './stores/canvas.store.service';
 import { ArrayService } from './arrays.service';
 import { FixedArray } from '../models/FixedArray';
@@ -144,14 +143,62 @@ export class CanvasService {
     this.canvasStore.displayedImage.set(null);
   }
 
-  getColorAtPosition(position: FixedArray<number, 2>) {
+  listenForMouseClick() {
+    var context = this.canvasStore.context2D();
+    if (context == null) {
+      throw new Error("No context");
+    }
+    var mouseClickObservable = new Observable<MouseEvent>((subscriber) => {
+      context!.canvas.addEventListener('click', (event) => {
+        subscriber.next(event);
+      });
+    });
+    this.canvasStore.onMouseClick.set(mouseClickObservable);
+    return mouseClickObservable;
+  }
+
+  removeMouseClickListener() {
     var context = this.canvasStore.context2D();
     if (context == null) {
       return;
+    }
+    this.canvasStore.onMouseClick.set(null);
+    context.canvas.removeEventListener('click', () => {});
+  }
+
+  getPixelFromMouseEvent(mouseEvent: MouseEvent) {
+    var mousePosition = [mouseEvent.pageY, mouseEvent.pageX];
+    var context = this.canvasStore.context2D();
+    if (context == null) {
+      throw new Error("No context");
+    }
+    var positionOnCanvas: FixedArray<number, 2> = [
+      mousePosition[0] - context.canvas.offsetTop,
+      mousePosition[1] - context.canvas.offsetLeft,
+    ]
+    return this.getColorAtPosition(positionOnCanvas);
+  }
+
+  getColorAtPosition(position: FixedArray<number, 2>) {
+    var context = this.canvasStore.context2D();
+    if (context == null) {
+      throw new Error("No context");
     }
     var imageData = this.getImageData(context).imageData;
     var pixels2D = this.arrayService.to2D(this.imageDataToPixels(imageData), context.canvas.width);
     var pixel = pixels2D[position[1]][position[0]]
     return pixel;
+  }
+
+  pixelToColor(pixel: Pixel) {
+    return `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${pixel[3]})`
+  }
+
+  reset() {
+    this.canvasStore.rawImage.set(null);
+    this.canvasStore.displayedImage.set(null);
+    this.canvasStore.sliderRawValue.set(1);
+    this.canvasStore.sliderMultiplier.set(1);
+    this.removeMouseClickListener();
   }
 }

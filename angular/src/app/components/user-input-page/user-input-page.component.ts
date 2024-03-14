@@ -15,6 +15,7 @@ import { ProcessedImageStore } from '../../services/stores/processed-image.store
 import { KMeansFormService } from '../../services/stores/kmeans-form.service';
 import { CustomError } from '../../models/CustomError';
 import { CentroidSelectorComponent } from '../centroid-selector/centroid-selector.component';
+import { CanvasService } from '../../services/canvas.service';
 
 @Component({
   selector: 'app-user-input-page',
@@ -47,6 +48,7 @@ export class UserInputPageComponent {
   // stepper!: MatStepper;
 
   constructor(
+    private canvasService: CanvasService,
     private canvasStore: CanvasStore,
     private processedImageStore: ProcessedImageStore,
     private fileService: FileService,
@@ -66,7 +68,7 @@ export class UserInputPageComponent {
   }
 
   reset() {
-    this.canvasStore.reset();
+    this.canvasService.reset();
     this.processedImageStore.reset();
     // this.stepper.reset();
     this.kmeansForm.form.controls.iterations.setValue(10);

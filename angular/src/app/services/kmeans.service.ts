@@ -20,8 +20,8 @@ export class KmeansService {
    * @param clusters number of clusters/centroids to calculate
    * @param epochs number of calculation iterations
    */
-  kmeans(data: Vector[], clusters: number, epochs: number) {
-    var centroids = this.getRandomInitialCentroids(data, clusters)
+  kmeans(data: Vector[], clusters: number, epochs: number, initialCentroids: Vector[] | null = null) {
+    var centroids = this.initializeCentroids(data, clusters, initialCentroids)
     var prevCentroids = [...centroids]
     var distances = this.getDistancesFromCentroids(data, centroids, this.euclideanDistance)
     var labeledData = this.getLabeledData(distances)
@@ -57,7 +57,22 @@ export class KmeansService {
     return { labels, labeledData, centroids }
   }
 
-  private getRandomInitialCentroids(data: Vector[], clusters: number) {
+  private initializeCentroids(data: Vector[], clusters: number, initialCentroids: Vector[] | null) {
+    if (initialCentroids == null) {
+      return this.getRandomInitialCentroids(data, clusters);
+    }
+    if (initialCentroids.length < clusters) {
+      var missingCentroidsCount = clusters - initialCentroids.length;
+      var missingCentroids = this.getRandomInitialCentroids(data, missingCentroidsCount);
+      initialCentroids.concat(missingCentroids);
+    }
+    if (initialCentroids.length > clusters) {
+      initialCentroids = initialCentroids.slice(0, clusters);
+    }
+    return initialCentroids;
+  }
+
+  getRandomInitialCentroids(data: Vector[], clusters: number) {
     var xIndexes = new Array(clusters).fill(0).map(_ => Math.floor(Math.random() * data.length))
     var centroids = xIndexes.map(index => data[index]);
     return centroids
