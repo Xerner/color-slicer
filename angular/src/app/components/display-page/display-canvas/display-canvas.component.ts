@@ -79,7 +79,7 @@ export class DisplayCanvasComponent {
 
   protected getCanvasClass() {
     if (this.hasImageData()) {
-      if  (this.canvasStore.onMouseClick() != null) {
+      if  (this.canvasStore.areMouseEventsListening()) {
         return this.SHOWN_CANVAS_CLASS + ' cursor-crosshair';
       }
       return this.SHOWN_CANVAS_CLASS;

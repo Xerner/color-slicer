@@ -16,5 +16,5 @@ export class CanvasStore {
   onImageProcessed = new Subject<ImageDisplayInfo>();
   onContext2DReady = new Subject<void>();
 
-  onMouseClick = signal<Observable<MouseEvent> | null>(null);
+  areMouseEventsListening = signal<boolean>(false);
 }

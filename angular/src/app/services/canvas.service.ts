@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Pixel } from '../models/Pixel';
-import { Observable, combineLatest, filter } from 'rxjs';
+import { Observable, Subscriber, combineLatest, filter } from 'rxjs';
 import { CanvasStore } from './stores/canvas.store.service';
 import { ArrayService } from './arrays.service';
 import { FixedArray } from '../models/FixedArray';
@@ -10,6 +10,7 @@ import { FixedArray } from '../models/FixedArray';
 })
 export class CanvasService {
   readonly IDENTITY_TRANSFORM = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  private mouseMoveSubscriber: Subscriber<MouseEvent> | null = null;
 
   constructor(
     private canvasStore: CanvasStore,
@@ -131,7 +132,7 @@ export class CanvasService {
     this.canvasStore.displayedImage.set(null);
   }
 
-  listenForMouseClick() {
+  listenForMouseEvents() {
     var context = this.canvasStore.context2D();
     if (context == null) {
       throw new Error("No context");
@@ -139,30 +140,41 @@ export class CanvasService {
     var mouseClickObservable = new Observable<MouseEvent>((subscriber) => {
       context!.canvas.addEventListener('click', (event) => {
         subscriber.next(event);
+        subscriber.complete();
       });
     });
-    this.canvasStore.onMouseClick.set(mouseClickObservable);
-    return mouseClickObservable;
+    var mouseMoveObservable = new Observable<MouseEvent>((subscriber) => {
+      this.mouseMoveSubscriber = subscriber;
+      context!.canvas.addEventListener('mousemove', (event) => {
+        subscriber.next(event);
+      });
+    });
+    this.canvasStore.areMouseEventsListening.set(true);
+    return { clickEvent: mouseClickObservable, mouseMoveEvent: mouseMoveObservable };
   }
 
-  removeMouseClickListener() {
+  removeMouseEventListener() {
     var context = this.canvasStore.context2D();
     if (context == null) {
-      return;
+      throw new Error("No context");
     }
-    this.canvasStore.onMouseClick.set(null);
-    context.canvas.removeEventListener('click', () => {});
+    this.canvasStore.areMouseEventsListening.set(false);
+    context.canvas.removeEventListener('onmouseclick', () => {});
+    context.canvas.removeEventListener('onmousemove', () => {});
+    if (this.mouseMoveSubscriber != null) {
+      this.mouseMoveSubscriber.complete();
+    }
   }
 
   getPixelFromMouseEvent(mouseEvent: MouseEvent) {
-    var mousePosition = [mouseEvent.pageY, mouseEvent.pageX];
+    var mousePosition = [mouseEvent.pageX, mouseEvent.pageY];
     var context = this.canvasStore.context2D();
     if (context == null) {
       throw new Error("No context");
     }
     var positionOnCanvas: FixedArray<number, 2> = [
-      mousePosition[0] - context.canvas.offsetTop,
-      mousePosition[1] - context.canvas.offsetLeft,
+      mousePosition[0] - context.canvas.offsetLeft,
+      mousePosition[1] - context.canvas.offsetTop,
     ]
     return this.getColorAtPosition(positionOnCanvas);
   }
@@ -174,7 +186,11 @@ export class CanvasService {
     }
     var imageData = this.getImageData(context).imageData;
     var pixels2D = this.arrayService.to2D(this.imageDataToPixels(imageData), context.canvas.width);
-    var pixel = pixels2D[position[1]][position[0]]
+    var column = pixels2D[position[0]];
+    if (column == undefined) {
+      return null;
+    }
+    var pixel = column[position[1]]
     return pixel;
   }
 
@@ -187,6 +203,6 @@ export class CanvasService {
     this.canvasStore.displayedImage.set(null);
     this.canvasStore.sliderRawValue.set(1);
     this.canvasStore.sliderMultiplier.set(1);
-    this.removeMouseClickListener();
+    this.removeMouseEventListener();
   }
 }

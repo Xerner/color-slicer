@@ -32,7 +32,7 @@ export class KmeansImageService {
       throw new CustomError("No context")
     }
     var imageData = this.canvasService.getImageDataFromImage(context2D, image);
-    var initialCentroids = this.processedImageStore.initialCentroids();
+    var initialCentroids = this.processedImageStore.initialCentroids().map(centroid => centroid());
     var processedImage = this.createKmeansImages(image, imageData, clusters, iterations, initialCentroids, maskValue);
     this.loadKmeansImages(context2D, processedImage).subscribe(() => {
       var processedImage = this.processedImageStore.processedImage;

@@ -11,7 +11,7 @@ export class CentroidComponent {
   index = input.required<number>();
   centroid = input.required<Pixel>();
   isSelected = input.required<boolean>();
-  onSelected = input.required<((pixel: Pixel) => void)>();
+  onSelected = input.required<((index: number) => void)>();
   centroidStyle = computed<string>(() => {
     return this.getCentroidStyle(this.centroid());
   });

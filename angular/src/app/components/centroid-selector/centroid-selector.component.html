@@ -2,8 +2,8 @@
   @for (centroid of this.processedImageStore.initialCentroids(); track centroid; let i = $index) {
     <app-centroid 
       [index]="i"
-      [centroid]="centroid"
-      [isSelected]="centroid == this.centroidSelectorService.selectedCentroid()"
+      [centroid]="centroid()"
+      [isSelected]="i == this.centroidSelectorService.selectedCentroid()"
       [onSelected]="this.centroidSelectorService.onCentroidSelectedBound"
       ></app-centroid>
   }

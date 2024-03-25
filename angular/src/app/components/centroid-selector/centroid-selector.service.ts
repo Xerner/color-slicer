@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { first } from 'rxjs';
 import { Pixel } from '../../models/Pixel';
 import { CanvasService } from '../../services/canvas.service';
@@ -7,8 +7,9 @@ import { ProcessedImageStore } from '../../services/stores/processed-image.store
 
 @Injectable({ providedIn: 'root' })
 export class CentroidSelectorService {
-  selectedCentroid = signal<Pixel | null>(null);
-  
+  selectedCentroid = signal<number | null>(null);
+  prevCentroidPixel = signal<Pixel>(new Pixel(0, 0, 0, 0));
+
   constructor(
     private canvasService: CanvasService,
     private kmeansImageService: KmeansImageService,
@@ -30,34 +31,48 @@ export class CentroidSelectorService {
     }
     var newCentroidCount = count - this.processedImageStore.initialCentroids().length;
     var newRandomCentroids = this.kmeansImageService.getRandomInitialCentroids(newCentroidCount) as Pixel[];
+    var centroidSignals = newRandomCentroids.map((centroid) => signal(centroid));
     this.processedImageStore.initialCentroids.set([
       ...this.processedImageStore.initialCentroids(),
-      ...newRandomCentroids
+      ...centroidSignals
     ]);
   }
 
   onCentroidSelectedBound = this.onCentroidSelected.bind(this);
-  onCentroidSelected(centroid: Pixel) {
-    if (centroid == null) {
+  onCentroidSelected(selectedCentroidIndex: number) {
+    var selectedCentroid = this.processedImageStore.initialCentroids()[selectedCentroidIndex]();
+    if (this.selectedCentroid() == selectedCentroidIndex) {
+      this.prevCentroidPixel.set(selectedCentroid);
+      this.selectedCentroid.set(null);
+      this.canvasService.removeMouseEventListener();
       return;
     }
-    if (this.selectedCentroid() == centroid) {
-      this.selectedCentroid.set(null);
-      this.canvasService.removeMouseClickListener();
+    this.selectedCentroid.set(selectedCentroidIndex);
+    var { clickEvent, mouseMoveEvent } = this.canvasService.listenForMouseEvents();
+    clickEvent.pipe(first()).subscribe(this.onMouseClick.bind(this, selectedCentroidIndex));
+    mouseMoveEvent.subscribe(this.onMouseMove.bind(this, selectedCentroidIndex));
+  }
+
+  onMouseClick(selectedCentroidIndex: number, mouseEvent: MouseEvent) {
+    var selectedPixel = this.canvasService.getPixelFromMouseEvent(mouseEvent);
+    if (selectedPixel == null || selectedPixel == undefined) {
       return;
     }
-    this.selectedCentroid.set(centroid);
-    this.canvasService.listenForMouseClick().pipe(first()).subscribe((mouseEvent) => {
-      var pixel = this.canvasService.getPixelFromMouseEvent(mouseEvent);
-      var index = this.processedImageStore.initialCentroids().indexOf(centroid);
-      this.processedImageStore.initialCentroids().splice(index, 1, pixel);
-      this.processedImageStore.initialCentroids.set([...this.processedImageStore.initialCentroids()]);
-      // this.processedImageStore.initialCentroids.update((initialCentroids) => {
-      //   initialCentroids.splice(index, 1, pixel);
-      //   return initialCentroids;
-      // });
-      this.selectedCentroid.set(null);
-      this.canvasService.removeMouseClickListener();
-    });
+    var centroid = this.processedImageStore.initialCentroids()[selectedCentroidIndex];
+    centroid?.set(selectedPixel)
+    this.selectedCentroid.set(null);
+    this.canvasService.removeMouseEventListener();
+  }
+
+  onMouseMove(selectedCentroidIndex: number, mouseEvent: MouseEvent) {
+    var hoveredPixel = this.canvasService.getPixelFromMouseEvent(mouseEvent);
+    if (hoveredPixel == null || hoveredPixel == undefined) {
+      return;
+    }
+    var centroid = this.processedImageStore.initialCentroids()[selectedCentroidIndex];
+    if (centroid == undefined || centroid == null) {
+      return;
+    }
+    centroid.set(hoveredPixel);
   }
 }
