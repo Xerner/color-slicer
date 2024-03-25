@@ -24,15 +24,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
   ],
 })
 export class DisplayPageComponent {
-  displayedImage = computed(() => {
-    var displayedImage = this.canvasStore.displayedImage();
-    if (displayedImage == null) {
-      return null;
-    }
-    return displayedImage.image;
-  });
   hasImageData = computed<boolean>(() => {
-    return this.displayedImage() != null;
+    return this.canvasStore.displayedImage() != null;
   });
   sliderValue = computed<number>(() => {
     return this.canvasStore.sliderRawValue() * this.canvasStore.sliderMultiplier();

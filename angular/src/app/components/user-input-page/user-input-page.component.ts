@@ -31,12 +31,12 @@ import { CanvasService } from '../../services/canvas.service';
     LoadingBarComponent,
     CentroidSelectorComponent,
   ],
-  // providers: [
-  //   {
-  //     provide: STEPPER_GLOBAL_OPTIONS,
-  //     useValue: { showError: true }
-  //   }
-  // ],
+  providers: [
+    {
+      provide: STEPPER_GLOBAL_OPTIONS,
+      useValue: { showError: true }
+    }
+  ],
   templateUrl: './user-input-page.component.html',
 })
 export class UserInputPageComponent {
@@ -44,8 +44,8 @@ export class UserInputPageComponent {
     file: new FormControl<File | null>(null, Validators.required),
   });
 
-  // @ViewChild(MatStepper, { static: true }) 
-  // stepper!: MatStepper;
+  @ViewChild(MatStepper, { static: true }) 
+  stepper!: MatStepper;
 
   constructor(
     private canvasService: CanvasService,

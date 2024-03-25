@@ -2,7 +2,6 @@ import { ImageDisplayInfo } from "../../models/ImageDisplayInfo";
 import { FixedArray } from "../../models/FixedArray";
 import { Pixel } from "../../models/Pixel";
 import { Injectable, computed, signal } from "@angular/core";
-import { Centroid } from "../../models/Centroid";
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +9,8 @@ import { Centroid } from "../../models/Centroid";
 export class ProcessedImageStore {
   readonly ORIGINAL_IMAGE_LABEL = "Original Image"
   readonly PROCESSED_IMAGE_LABEL = "Processed Image"
-
+  readonly INITIAL_CENTROID_COUNT = 4;
+  
   originalImage = signal<ImageDisplayInfo>({
     displayLabel: "Original Image",
     image: null,

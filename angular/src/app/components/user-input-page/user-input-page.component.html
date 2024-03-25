@@ -1,6 +1,6 @@
 <div class="flex flex-col h-full">
-  <!-- <mat-stepper orientation="vertical" linear #stepper> -->
-    <!-- <mat-step [stepControl]="fileForm" label="Upload an image"> -->
+  <mat-stepper orientation="vertical" linear #stepper>
+    <mat-step [stepControl]="fileForm" label="Upload an image">
       <form [formGroup]="fileForm" class="my-3 flex flex-col gap-y-3">
         <app-file-input 
           formControlName="file" 
@@ -11,13 +11,12 @@
         <!-- Buttons -->
         <div class="w-full flex justify-between">
           <button mat-raised-button color="primary" (click)="reset()">Reset</button>
-          <!-- <button mat-button matStepperNext>Next</button> -->
-          <button mat-button>Next</button>
+          <button mat-button matStepperNext>Next</button>
         </div>
       </form>
-    <!-- </mat-step> -->
+    </mat-step>
   
-    <!-- <mat-step [stepControl]="kmeansForm.form" label="Define K-means parameters"> -->
+    <mat-step [stepControl]="kmeansForm.form" label="Define K-means parameters">
       <form [formGroup]="kmeansForm.form" class="my-3 flex flex-col gap-y-3">
         <mat-form-field class="w-full">
           <mat-label class="w-full">Number of Clusters</mat-label>
@@ -37,13 +36,12 @@
         <div class="w-full flex justify-between gap-x-3">
           <button mat-raised-button color="primary" (click)="reset()">Reset</button>
           <div class="flex gap-x-3">
-            <!-- <button mat-button matStepperPrevious>Previous</button> -->
-            <button mat-button>Previous</button>
+            <button mat-button matStepperPrevious>Previous</button>
             <button mat-raised-button color="primary" [disabled]="!isReadyForKmeans()" (click)="generateKmeansImages()">Generate</button>
           </div>
         </div>
       </form>
-    <!-- </mat-step> -->
-  <!-- </mat-stepper> -->
+    </mat-step>
+  </mat-stepper>
   <app-loading-bar></app-loading-bar>
 </div>

@@ -28,7 +28,7 @@ export class DisplayCanvasComponent {
     return [image.width, image.height];
   });
   scale = input<number>(1);
-  protected hasImageData = computed<boolean>(() => {
+  hasImageData = computed<boolean>(() => {
     return this.image() != null;
   });
 

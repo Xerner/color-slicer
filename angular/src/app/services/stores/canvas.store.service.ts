@@ -14,7 +14,6 @@ export class CanvasStore {
   sliderMultiplier = signal<number>(1);
 
   onImageProcessed = new Subject<ImageDisplayInfo>();
-  onImageLoaded = new Subject<void>();
   onContext2DReady = new Subject<void>();
 
   onMouseClick = signal<Observable<MouseEvent> | null>(null);

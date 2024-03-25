@@ -14,15 +14,7 @@ export class CanvasService {
   constructor(
     private canvasStore: CanvasStore,
     private arrayService: ArrayService,
-    ) {
-    combineLatest([
-      this.canvasStore.onContext2DReady.pipe(filter((context) => context != null)),
-      this.canvasStore.onImageLoaded.pipe(filter((image) => image != null)), 
-    ]).subscribe((args) => {
-      const [context, image] = args;
-      this.updateCanvasImage(context!, image!);
-    });
-  }
+  ) {}
 
   useCanvas<T>(context: CanvasRenderingContext2D, callback: (context: CanvasRenderingContext2D) => T): T {
     var imageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
@@ -72,10 +64,6 @@ export class CanvasService {
     });;
   }
 
-  public updateCanvasImage(context: CanvasRenderingContext2D, image: HTMLImageElement) {
-    this.drawImage(context, image);
-  }
-
   public imageDataToPixels(imageData: ImageData): Pixel[] {
     var pixels: Pixel[] = [];
     imageData.data.forEach((_, i) => {
@@ -92,7 +80,7 @@ export class CanvasService {
     context.imageSmoothingEnabled = false;
   }
   
-  drawImage(context: CanvasRenderingContext2D, image: HTMLImageElement) {
+  public drawImage(context: CanvasRenderingContext2D, image: HTMLImageElement) {
     this.predraw(context, image.width, image.height);
     context.drawImage(image, 0, 0, context.canvas.width, context.canvas.height);
   }

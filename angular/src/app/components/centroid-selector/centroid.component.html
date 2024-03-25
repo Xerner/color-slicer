@@ -1,0 +1,7 @@
+<div class="flex flex-col items-center gap-y-2">
+  <div 
+    [class]="getCentroidClass()" 
+    [style]="centroidStyle()"
+    (click)="onSelected()(centroid())"></div>
+  <div>Centroid {{index() + 1}}</div>
+</div>
