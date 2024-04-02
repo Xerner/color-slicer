@@ -30,7 +30,12 @@
           <mat-hint>How many times the algorithm will calculate the clusters</mat-hint>
         </mat-form-field>
     
-        <app-centroid-selector></app-centroid-selector>
+        <div class="bg-slate-100 rounded p-3">
+          <div>Initial Centroids</div>
+          <hr class="my-2"/>
+          <app-centroid-selector></app-centroid-selector>
+          <div class="text-xs">The closer the initial centroid colors are to your desired output colors, the better</div>
+        </div>
 
         <!-- Buttons -->
         <div class="w-full flex justify-between gap-x-3">

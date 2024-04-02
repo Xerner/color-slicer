@@ -1,7 +1,7 @@
 import { Component } from "@angular/core";
 import { KMeansFormService } from "../../services/stores/kmeans-form.service";
 import { ProcessedImageStore } from "../../services/stores/processed-image.store.service";
-import { CentroidComponent } from "./centroid.component";
+import { CentroidComponent } from "./centroid/centroid.component";
 import { CentroidSelectorService } from "./centroid-selector.service";
 
 @Component({

@@ -1,4 +1,4 @@
-<div class="flex flex-wrap justify-center gap-x-5 gap-y-3 p-3">
+<div class="w-full grid grid-cols-4 gap-3">
   @for (centroid of this.processedImageStore.initialCentroids(); track centroid; let i = $index) {
     <app-centroid 
       [index]="i"

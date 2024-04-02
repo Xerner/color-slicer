@@ -1,6 +1,6 @@
 import { Component, computed, input } from "@angular/core";
-import { CanvasService } from "../../services/canvas.service";
-import { Pixel } from "../../models/Pixel";
+import { CanvasService } from "../../../services/canvas.service";
+import { Pixel } from "../../../models/Pixel";
 
 @Component({
   selector: 'app-centroid',
@@ -22,13 +22,13 @@ export class CentroidComponent {
 
   getCentroidStyle(centroid: Pixel) {
     var color = this.canvasService.pixelToColor(centroid);
-    return `background-color: ${color}; width: 32px; height: 32px;`
+    return `background-color: ${color};`
   }
 
   getCentroidClass() {
     if (this.isSelected()) {
-      return 'rounded border-2 border-rose-500'
+      return 'border-2 border-rose-500'
     }
-    return 'rounded border'
+    return ''
   }
 }
