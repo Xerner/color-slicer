@@ -1,13 +1,11 @@
 
 <mat-selection-list #imagesList [multiple]="false" (selectionChange)="onSelectionChanged($event)">
   @if (hasImages()) {
-    <div mat-subheader class="font-bold border-b-2 border-slate-300">Full Images</div>
-    @for (image of fullImages(); track $index) {
-      <mat-list-option [value]="image" [disabled]="image.disabled">{{image.name}}</mat-list-option>
-    }
-    <div mat-subheader class="font-bold border-b-2 border-slate-300">Color Layers</div>
-    @for (image of colorLayers(); track $index) {
-      <mat-list-option [value]="image" [disabled]="image.disabled">{{image.name}}</mat-list-option>
+    @for (group of Object.entries(images()); track $index) {
+      <div mat-subheader class="font-bold border-b-2 border-slate-300">{{ group[0] }}</div>
+      @for (matListOptionArgs of group[1]; track $index) {
+        <mat-list-option [value]="matListOptionArgs.value" [disabled]="matListOptionArgs.disabled">{{ matListOptionArgs.name }}</mat-list-option>
+      }
     }
   }
 </mat-selection-list>

@@ -1,4 +1,4 @@
-import { Component, ViewChild, computed } from "@angular/core";
+import { Component, Signal, ViewChild, computed } from "@angular/core";
 import { MatListModule, MatSelectionList, MatSelectionListChange } from "@angular/material/list";
 import { CanvasStore } from "../../services/stores/canvas.store.service";
 import { ImageDisplayInfo } from "../../models/ImageDisplayInfo";
@@ -21,14 +21,20 @@ export interface MatListOptionArgs {
   ],
 })
 export class ImageSelectionComponent {
-  fullImages = computed<MatListOptionArgs[]>(() => {
-    return this.convertToMatListOptionArgs(this.processedImageStore.fullImages());
-  });
-  colorLayers = computed<MatListOptionArgs[]>(() => {
-    return this.convertToMatListOptionArgs(this.processedImageStore.colorLayersImages());
+  Object = Object;
+  images: Signal<Record<string, MatListOptionArgs[]>> = computed(() => {
+    var groups: Record<string, MatListOptionArgs[]> = {};
+    this.processedImageStore.processedImages().map((imageDisplayInfo) => {
+      var matListOptionArgs = groups[imageDisplayInfo.group]
+      if (matListOptionArgs === undefined) {
+        groups[imageDisplayInfo.group] = [];
+      }
+      matListOptionArgs.push(this.convertToMatListOptionArgs(imageDisplayInfo));
+    });
+    return groups;
   });
   hasImages = computed(() => {
-    return this.processedImageStore.colorLayersImages().length > 0
+    return this.processedImageStore.processedImages().length > 0
   });
 
   @ViewChild(MatSelectionList, { static: true })
@@ -45,7 +51,7 @@ export class ImageSelectionComponent {
 
   onSelectionChanged(selectionChange: MatSelectionListChange) {
     var selectedImage = selectionChange.source.selectedOptions.selected[0];
-    var imageDisplayInfo = this.processedImageStore.allImages.find((imageAndLabel) => imageAndLabel.displayLabel === selectedImage.value.name);
+    var imageDisplayInfo = this.processedImageStore.processedImages().find((imageAndLabel) => imageAndLabel.displayLabel === selectedImage.value.name);
     if (imageDisplayInfo === undefined) {
       throw new CustomError("Image not found");
     }
@@ -57,13 +63,11 @@ export class ImageSelectionComponent {
     // this.imagesList!.writeValue([imageDisplayInfo.displayLabel]);
   }
 
-  convertToMatListOptionArgs(imageDisplayInfos: ImageDisplayInfo[]): MatListOptionArgs[] {
-    return imageDisplayInfos.map((imageDisplayInfo) => {
-      return {
-        name: imageDisplayInfo.displayLabel,
-        value: imageDisplayInfo.image,
-        disabled: imageDisplayInfo.image == null,
-      }
-    });
+  convertToMatListOptionArgs(imageDisplayInfo: ImageDisplayInfo): MatListOptionArgs {
+    return {
+      name: imageDisplayInfo.displayLabel,
+      value: imageDisplayInfo.image,
+      disabled: imageDisplayInfo.image == null,
+    }
   }
 }

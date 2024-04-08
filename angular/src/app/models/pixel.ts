@@ -74,4 +74,8 @@ export class Pixel extends Vector {
   override unshift(...items: number[]): number {
     throw new Error("Illegal operation");
   }
+
+  override toString(): string {
+    return `rgba(${this[0]}, ${this[1]}, ${this[2]}, ${this[3]})`;
+  }
 }

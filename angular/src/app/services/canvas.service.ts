@@ -186,11 +186,11 @@ export class CanvasService {
     }
     var imageData = this.getImageData(context).imageData;
     var pixels2D = this.arrayService.to2D(this.imageDataToPixels(imageData), context.canvas.width);
-    var column = pixels2D[position[0]];
-    if (column == undefined) {
+    var row = pixels2D[position[1]];
+    if (row == undefined) {
       return null;
     }
-    var pixel = column[position[1]]
+    var pixel = row[position[0]]
     return pixel;
   }
 

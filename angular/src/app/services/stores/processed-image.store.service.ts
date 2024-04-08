@@ -11,35 +11,29 @@ export class ProcessedImageStore {
   readonly PROCESSED_IMAGE_LABEL = "Processed Image"
   readonly INITIAL_CENTROID_COUNT = 4;
   
-  originalImage = signal<ImageDisplayInfo>({
-    displayLabel: "Original Image",
-    image: null,
-    label: null
-  });
-  processedImage = signal<ImageDisplayInfo>({
-    displayLabel: "Processed Image",
-    image: null,
-    label: null
-  });
   initialCentroids = signal<WritableSignal<Pixel>[]>([]);
   centroids: Pixel[] = [];
   labels: Set<number> = new Set();
-  size: FixedArray<number, 2> = [0, 0];
-  processedImagePixels: Pixel[] | null = null;
-  colorLayers: Record<number, Pixel[] | null> = {};
   labelColors = new Map<number, Pixel>();
   labeledColors: number[] = [];
-  
-  colorLayersImages = signal<ImageDisplayInfo[]>([]);
 
-  get allImages() {
-    return this.colorLayersImages().concat(this.fullImages());
-  }
-
-  fullImages = computed<ImageDisplayInfo[]>(() => {
-    return [this.originalImage(), this.processedImage()];
+  size: FixedArray<number, 2> = [0, 0];
+  originalImage = signal<ImageDisplayInfo>({
+    group: "Full Images",
+    displayLabel: "Original Image",
+    image: null,
+    label: null,
+    pixels: null
   });
-
+  processedImage = signal<ImageDisplayInfo>({
+    group: "Full Images",
+    displayLabel: "Processed Image",
+    image: null,
+    label: null,
+    pixels: null
+  });
+  processedImages = signal<ImageDisplayInfo[]>([]);
+  
   initialize(originalImage: HTMLImageElement, centroids: Pixel[], labels: Set<number>) {
     this.originalImage.set({ ...this.originalImage(), image: originalImage });
     this.centroids = centroids;
@@ -51,13 +45,13 @@ export class ProcessedImageStore {
   reset() {
     this.originalImage.set({ ...this.originalImage(), image: null });
     this.processedImage.set({ ...this.processedImage(), image: null });
-    this.processedImagePixels = null;
+    this.processedImages.set([]);
+    //this.processedImagePixels = null;
     this.centroids = [];
     this.labels.clear();
     this.size = [0, 0];
-    this.colorLayers = {};
+    //this.colorLayers = {};
     this.labelColors.clear();
     this.labeledColors = [];
-    this.colorLayersImages.set([]);
   }
 }
