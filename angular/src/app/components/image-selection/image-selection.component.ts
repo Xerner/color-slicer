@@ -49,17 +49,8 @@ export class ImageSelectionComponent {
     private processedImageStore: ProcessedImageStore,
   ) {}
 
-  ngOnInit() {
-    this.canvasService.onImageProcessed.subscribe(this.onImageProcessed.bind(this));
-  }
-
   onSelectionChanged(selectionChange: MatSelectionListChange) {
     var selectedImageDisplayInfo = selectionChange.source.selectedOptions.selected[0].value;
     this.canvasService.displayedImage.set(selectedImageDisplayInfo);
-  }
-
-  onImageProcessed(imageDisplayInfo: ImageDisplayInfo) {
-    // FIXME: This doesn't work. idk how to manually set the MatSelectionList value
-    // this.imagesList!.writeValue([imageDisplayInfo.displayLabel]);
   }
 }

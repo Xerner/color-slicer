@@ -12,9 +12,7 @@ export class CanvasStore {
   displayedImage = signal<ImageDisplayInfo | null>(null);
   sliderRawValue = signal<number>(1);
   sliderMultiplier = signal<number>(1);
-
-  onImageProcessed = new Subject<ImageDisplayInfo>();
-  onContext2DReady = new Subject<void>();
-
+  
   areMouseEventsListening = signal<boolean>(false);
+  onContext2DReady = new Subject<void>();
 }

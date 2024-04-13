@@ -11,6 +11,36 @@ export class ProcessedImageStore {
   readonly PROCESSED_IMAGE_LABEL = "Processed Image"
   readonly INITIAL_CENTROID_COUNT = 4;
   
+  getOriginalImage(): ImageDisplayInfo | undefined {
+    return this.processedImages().find((imageDisplayInfo) => imageDisplayInfo.displayLabel === this.ORIGINAL_IMAGE_LABEL);
+  }
+
+  getProcessedImage(): ImageDisplayInfo | undefined {
+    return this.processedImages().find((imageDisplayInfo) => imageDisplayInfo.displayLabel === this.PROCESSED_IMAGE_LABEL);
+  }
+
+  getNewOriginalImage(image: HTMLImageElement): ImageDisplayInfo {
+    return {
+      group: "Full Images",
+      displayLabel: "Original Image",
+      image: signal(image),
+      loading: signal(false),
+      label: null,
+      pixels: null
+    }
+  }
+
+  getNewProcessedImage(pixels: Pixel[]): ImageDisplayInfo {
+    return {
+      group: "Full Images",
+      displayLabel: "Processed Image",
+      image: signal(null),
+      loading: signal(false),
+      label: null,
+      pixels: pixels
+    }
+  }
+
   initialCentroids = signal<WritableSignal<Pixel>[]>([]);
   centroids: Pixel[] = [];
   labels: Set<number> = new Set();
@@ -18,41 +48,31 @@ export class ProcessedImageStore {
   labeledColors: number[] = [];
 
   size: FixedArray<number, 2> = [0, 0];
-  originalImage = signal<ImageDisplayInfo>({
-    group: "Full Images",
-    displayLabel: "Original Image",
-    image: signal(null),
-    loading: signal(false),
-    label: null,
-    pixels: null
-  });
-  processedImage = signal<ImageDisplayInfo>({
-    group: "Full Images",
-    displayLabel: "Processed Image",
-    image: signal(null),
-    loading: signal(false),
-    label: null,
-    pixels: null
-  });
   processedImages = signal<ImageDisplayInfo[]>([]);
   
-  initialize(originalImage: HTMLImageElement, centroids: Pixel[], labels: Set<number>) {
-    this.originalImage().image.set(originalImage);
+  initializeForProcessing(centroids: Pixel[], labels: Set<number>) {
+    var originalImageInfo = this.getOriginalImage();
+    if (originalImageInfo == undefined) {
+      throw new Error("No original image");
+    }
+    var originalImage = originalImageInfo.image();
+    if (originalImage == null) {
+      throw new Error("No original image data");
+    }
+    this.processedImages.set(this.processedImages().filter(image => image == originalImageInfo));
     this.centroids = centroids;
     this.labels = labels;
     this.size = [originalImage.width, originalImage.height];
+    this.labelColors.clear();
+    this.labeledColors = [];
     return this;
   }
 
   reset() {
-    this.originalImage().image.set(null);
-    this.processedImage().image.set(null);
     this.processedImages.set([]);
-    //this.processedImagePixels = null;
     this.centroids = [];
     this.labels.clear();
     this.size = [0, 0];
-    //this.colorLayers = {};
     this.labelColors.clear();
     this.labeledColors = [];
   }

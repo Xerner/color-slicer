@@ -1,4 +1,4 @@
-import { Observable, defer, forkJoin, map, merge } from "rxjs";
+import { Observable, forkJoin } from "rxjs";
 import { Pixel } from "../models/Pixel";
 import { ProcessedImageStore } from "./stores/processed-image.store.service";
 import { Injectable, signal } from "@angular/core";
@@ -27,45 +27,38 @@ export class KmeansImageService {
   ) {}
   
   generateKmeansImages(image: HTMLImageElement, clusters: number, iterations: number, maskValue: number | null) {
-    this.processedImageStore.reset();
     var context2D = this.canvasStore.context2D();
     if (context2D == null) {
       throw new CustomError("No context")
     }
     var imageData = this.canvasService.getImageDataFromImage(context2D, image);
     var initialCentroids = this.processedImageStore.initialCentroids().map(centroid => centroid());
-    var processedImage = this.createKmeansImages(image, imageData, clusters, iterations, initialCentroids, maskValue);
-    this.loadKmeansImages(context2D, processedImage).subscribe(() => {
-      var processedImage = this.processedImageStore.processedImage;
-      if (processedImage === undefined) {
-        throw new CustomError("Processed image not found");
-      }
-      this.canvasStore.displayedImage.set(processedImage());
-      this.canvasStore.onImageProcessed.next(processedImage());
-    });
+    var processedImage = this.createKmeansImages(imageData, clusters, iterations, initialCentroids, maskValue);
+    this.loadKmeansImages(context2D, processedImage).subscribe(this.imagesDoneProcessing.bind(this));
   }
 
-  private createKmeansImages(image: HTMLImageElement, imageData: ImageData, clusters: number, iterations: number, initialCentroids: Pixel[] | null, maskValue: number | null) {
+  imagesDoneProcessing() {
+    var processedImage = this.processedImageStore.getProcessedImage();
+    if (processedImage == undefined) {
+      throw new CustomError("No processed image")
+    }
+    this.canvasStore.displayedImage.set(processedImage);
+  }
+
+  private createKmeansImages(imageData: ImageData, clusters: number, iterations: number, initialCentroids: Pixel[] | null, maskValue: number | null) {
     if (imageData == null) {
       throw new CustomError("No image data")
     }
     var pixels = this.canvasService.imageDataToPixels(imageData)
     var { labels, labeledData: labeledColors, centroids } = this.kmeansService.kmeans(pixels, clusters, iterations, initialCentroids)
-    var processedImage = this.processedImageStore.initialize(image, centroids as Pixel[], labels)
+    var processedImageStore = this.processedImageStore.initializeForProcessing(centroids as Pixel[], labels)
     this.loadingService.update("Generating Color Layers", 0);
-    var imageLabelDisplayInfos: ImageDisplayInfo[] = [];
-    imageLabelDisplayInfos.push({ 
-      displayLabel: "Original Image",
-      label: null, 
-      pixels: pixels,
-      image: signal<HTMLImageElement | null>(image),
-      loading: signal(false),
-      group: "Full Images",
-      });
+    var imageLabelDisplayInfos: ImageDisplayInfo[] = processedImageStore.processedImages();
+    
     for (let label = 0; label < clusters; label++) {
       var labelMask = this.kmeansService.createMask(labeledColors, label, maskValue)
       var { labelColor, colorLayer, imageMask } = this.createColorLayer(pixels, labelMask, label)
-      processedImage.labelColors.set(label, labelColor)
+      processedImageStore.labelColors.set(label, labelColor)
       imageLabelDisplayInfos.push({
         displayLabel: this.getLabelForImageSelection(this.COLOR_LAYER_LABEL, label, null),
         label: label, 
@@ -73,7 +66,7 @@ export class KmeansImageService {
         image: signal<HTMLImageElement | null>(null),
         loading: signal(false),
         group: "Color Layers",
-        });
+      });
       imageLabelDisplayInfos.push({ 
         displayLabel: this.getLabelForImageSelection(this.IMAGE_MASK_LABEL, label, null),
         label: label, 
@@ -84,16 +77,10 @@ export class KmeansImageService {
       });
       this.loadingService.update(`Generated Color Layer ${label + 1}`, (label + 1) / clusters);
     }
-    imageLabelDisplayInfos.push({ 
-      displayLabel: "Processed Image",
-      label: null, 
-      pixels: labeledColors.map(label => processedImage.labelColors.get(label)!),
-      image: signal<HTMLImageElement | null>(null),
-      loading: signal(false),
-      group: "Full Images",
-    });
-    processedImage.processedImages.set(imageLabelDisplayInfos);
-    return processedImage;
+    var processedImagePixels = labeledColors.map(label => processedImageStore.labelColors.get(label)!)
+    imageLabelDisplayInfos.splice(1, 0, processedImageStore.getNewProcessedImage(processedImagePixels));
+    processedImageStore.processedImages.set([...imageLabelDisplayInfos]);
+    return processedImageStore;
   }
 
   // TODO: add methods for swapping out how color replacement happens
@@ -105,12 +92,16 @@ export class KmeansImageService {
   }
 
   private loadKmeansImages(context: CanvasRenderingContext2D, processedImageStore: ProcessedImageStore) {
+    var loadingCount = 0;
     return new Observable<void>((subscriber) => {
       // Create the processed images ImageDisplayInfo
       var imageObservables = processedImageStore.processedImages()
         .filter(imageDisplayInfo => imageDisplayInfo.image() == null && imageDisplayInfo.pixels != null)
         .map(imageDisplayInfo => this.getImageObservable(context, processedImageStore, imageDisplayInfo));
       forkJoin(imageObservables).subscribe({
+        next: () => {
+          this.loadingService.update(`Finished processing image data ${loadingCount+1} / ${imageObservables.length}}`);
+        },
         complete: () => {
           // processedImageStore.processedImages.update(processedImages => {
           //   return [...processedImages.sort((a, b) => a.displayLabel.localeCompare(b.displayLabel))]
