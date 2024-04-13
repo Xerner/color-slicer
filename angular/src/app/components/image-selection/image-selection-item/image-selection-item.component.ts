@@ -18,4 +18,11 @@ export class ImageSelectionItemComponent {
   protected disabled = computed(() => {
     return this.imageDisplayInfo().image() == null;
   })
+  displayLabel = computed(() => {
+    var disabled = this.disabled();
+    if (disabled) {
+      return this.imageDisplayInfo().displayLabel + " (Empty)";
+    }
+    return this.imageDisplayInfo().displayLabel;
+  })
 }

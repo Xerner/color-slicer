@@ -99,13 +99,11 @@ export class KmeansImageService {
         .filter(imageDisplayInfo => imageDisplayInfo.image() == null && imageDisplayInfo.pixels != null)
         .map(imageDisplayInfo => this.getImageObservable(context, processedImageStore, imageDisplayInfo));
       forkJoin(imageObservables).subscribe({
-        next: () => {
-          this.loadingService.update(`Finished processing image data ${loadingCount+1} / ${imageObservables.length}}`);
-        },
+        // next: () => {
+        //   this.loadingService.update(`Finished processing image data ${loadingCount+1} / ${imageObservables.length}}`);
+        //   loadingCount++;
+        // },
         complete: () => {
-          // processedImageStore.processedImages.update(processedImages => {
-          //   return [...processedImages.sort((a, b) => a.displayLabel.localeCompare(b.displayLabel))]
-          // });
           subscriber.next();
           subscriber.complete();
         }
@@ -142,11 +140,7 @@ export class KmeansImageService {
   }  
 
   getLabelForImageSelection(formatString: string, label: number, image: HTMLImageElement | null) {
-    var displayLabel = formatString.replace("{}", label.toString());
-    if (image == null) {
-      displayLabel += " (Empty)"
-    }
-    return displayLabel;
+    return formatString.replace("{}", label.toString());
   }
 
   pixelsTo2D(processedImage: ProcessedImageStore,  pixels: Pixel[] | null) {
