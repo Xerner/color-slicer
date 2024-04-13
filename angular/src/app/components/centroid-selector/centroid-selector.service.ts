@@ -7,8 +7,8 @@ import { ProcessedImageStore } from '../../services/stores/processed-image.store
 
 @Injectable({ providedIn: 'root' })
 export class CentroidSelectorService {
-  selectedCentroid = signal<number | null>(null);
-  prevCentroidPixel = signal<Pixel>(new Pixel(0, 0, 0, 0));
+  selectedCentroidIndex = signal<number | null>(null);
+  prevCentroidPixel = signal<Pixel | null>(new Pixel(0, 0, 0, 0));
 
   constructor(
     private canvasService: CanvasService,
@@ -39,18 +39,33 @@ export class CentroidSelectorService {
   }
 
   onCentroidSelectedBound = this.onCentroidSelected.bind(this);
-  onCentroidSelected(selectedCentroidIndex: number) {
-    var selectedCentroid = this.processedImageStore.initialCentroids()[selectedCentroidIndex]();
-    if (this.selectedCentroid() == selectedCentroidIndex) {
-      this.prevCentroidPixel.set(selectedCentroid);
-      this.selectedCentroid.set(null);
-      this.canvasService.removeMouseEventListener();
+  onCentroidSelected(newIndex: number) {
+    this.canvasService.removeMouseEventListener();
+    this.restorePreviousCentroid();
+    var selectedCentroid = this.processedImageStore.initialCentroids()[newIndex]();
+    if (this.selectedCentroidIndex() == newIndex) {
+      this.selectedCentroidIndex.set(null);
       return;
     }
-    this.selectedCentroid.set(selectedCentroidIndex);
+    this.selectedCentroidIndex.set(newIndex);
+    this.prevCentroidPixel.set(selectedCentroid);
+    this.selectedCentroidIndex.set(newIndex);
     var { clickEvent, mouseMoveEvent } = this.canvasService.listenForMouseEvents();
-    clickEvent.pipe(first()).subscribe(this.onMouseClick.bind(this, selectedCentroidIndex));
-    mouseMoveEvent.subscribe(this.onMouseMove.bind(this, selectedCentroidIndex));
+    clickEvent.pipe(first()).subscribe(this.onMouseClick.bind(this, newIndex));
+    mouseMoveEvent.subscribe(this.onMouseMove.bind(this, newIndex));
+  }
+
+  restorePreviousCentroid() {
+    var prevCentroidIndex = this.selectedCentroidIndex();
+    if (prevCentroidIndex == null) {
+      return;
+    }
+    var centroid = this.processedImageStore.initialCentroids()[prevCentroidIndex];
+    var prevCentroidColor = this.prevCentroidPixel();
+    if (prevCentroidColor == null) {
+      return;
+    }
+    centroid.set(prevCentroidColor);
   }
 
   onMouseClick(selectedCentroidIndex: number, mouseEvent: MouseEvent) {
@@ -60,7 +75,8 @@ export class CentroidSelectorService {
     }
     var centroid = this.processedImageStore.initialCentroids()[selectedCentroidIndex];
     centroid?.set(selectedPixel)
-    this.selectedCentroid.set(null);
+    this.selectedCentroidIndex.set(null);
+    this.prevCentroidPixel.set(null);
     this.canvasService.removeMouseEventListener();
   }
 
@@ -69,10 +85,10 @@ export class CentroidSelectorService {
     if (hoveredPixel == null || hoveredPixel == undefined) {
       return;
     }
-    var centroid = this.processedImageStore.initialCentroids()[selectedCentroidIndex];
-    if (centroid == undefined || centroid == null) {
+    var selectedCentroid = this.processedImageStore.initialCentroids()[selectedCentroidIndex];
+    if (selectedCentroid == undefined || selectedCentroid == null) {
       return;
     }
-    centroid.set(hoveredPixel);
+    selectedCentroid.set(hoveredPixel);
   }
 }

@@ -15,6 +15,9 @@ export class CentroidComponent {
   centroidStyle = computed<string>(() => {
     return this.getCentroidStyle(this.centroid());
   });
+  textClass = computed<string>(() => {
+    return this.isSelected() ? 'text-white bg-blue-500 px-1 rounded-md' : '';
+  })
 
   constructor(
     private canvasService: CanvasService,
@@ -27,7 +30,7 @@ export class CentroidComponent {
 
   getCentroidClass() {
     if (this.isSelected()) {
-      return 'border-2 border-rose-500'
+      return 'border-4 border-blue-500'
     }
     return ''
   }

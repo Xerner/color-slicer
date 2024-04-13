@@ -16,6 +16,8 @@ import { KMeansFormService } from '../../services/stores/kmeans-form.service';
 import { CustomError } from '../../models/CustomError';
 import { CentroidSelectorComponent } from '../centroid-selector/centroid-selector.component';
 import { CanvasService } from '../../services/canvas.service';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-user-input-page',
@@ -30,6 +32,8 @@ import { CanvasService } from '../../services/canvas.service';
     ReactiveFormsModule,
     LoadingBarComponent,
     CentroidSelectorComponent,
+    MatIconModule,
+    MatTooltipModule,
   ],
   providers: [
     {

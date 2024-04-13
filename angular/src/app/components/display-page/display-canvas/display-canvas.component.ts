@@ -19,9 +19,8 @@ import { CanvasStore } from '../../../services/stores/canvas.store.service';
   ],
 })
 export class DisplayCanvasComponent {
-  image = input<HTMLImageElement | null>();
   size = computed<FixedArray<number, 2> | null>(() => {
-    var image = this.image();
+    var image = this.canvasStore.displayedImage()?.image();
     if (image == null) {
       return null;
     }
@@ -29,14 +28,15 @@ export class DisplayCanvasComponent {
   });
   scale = input<number>(1);
   hasImageData = computed<boolean>(() => {
-    return this.image() != null;
+    return this.canvasStore.displayedImage()?.image() != null;
   });
 
   onImageOrScaleUpdate = effect(() => {
     if (!this.hasImageData()) {
       return;
     }
-    this.redrawImage();
+    var image = this.canvasStore.displayedImage()?.image();
+    this.redrawImage(image);
   });
 
   readonly SHOWN_CANVAS_CLASS = 'shadow-md';
@@ -63,12 +63,15 @@ export class DisplayCanvasComponent {
     private canvasStore: CanvasStore,
   ) { }
 
-  redrawImage() {
+  redrawImage(image: HTMLImageElement | null | undefined) {
+    if (image == null || image == undefined) {
+      return;
+    }
     var context = this.context.getValue();
     if (context == null) {
       return;
     }
-    var image = this.image();
+    var image = this.canvasStore.displayedImage()?.image();
     if (image == null) {
       return;
     }

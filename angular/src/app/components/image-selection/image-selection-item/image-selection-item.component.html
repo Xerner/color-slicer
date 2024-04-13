@@ -1,0 +1,8 @@
+<mat-list-option [value]="imageDisplayInfo()" [disabled]="disabled()">
+  @if (imageDisplayInfo().loading()) {
+    <mat-spinner mode="indeterminate" diameter="16" color="secondary"></mat-spinner>
+  }
+  @else {
+    {{ imageDisplayInfo().displayLabel }}
+  }
+</mat-list-option>

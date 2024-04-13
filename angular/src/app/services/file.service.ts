@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import { Injectable, signal } from "@angular/core";
 import { CanvasStore } from "./stores/canvas.store.service";
 import { CanvasService } from "./canvas.service";
 import { ImageDisplayInfo } from "../models/ImageDisplayInfo";
@@ -30,16 +30,11 @@ export class FileService {
           throw new Error("No context");
         }
         this.canvasStore.rawImage.set(image);
-        var imageDisplayInfo: ImageDisplayInfo = {
-          displayLabel: file.name,
-          image: image,
-          label: null
-        }
         this.processedImageStore.reset();
         this.canvasService.drawImage(context, image);
         this.centroidSelectorService.initializeInitialCentroids();
-        this.processedImageStore.originalImage.set({ ...this.processedImageStore.originalImage(), image: image });
-        this.canvasStore.displayedImage.set(imageDisplayInfo);
+        this.processedImageStore.originalImage().image.set(image);
+        this.canvasStore.displayedImage.set(this.processedImageStore.originalImage());
       })
     };
     fileReader.readAsDataURL(file);

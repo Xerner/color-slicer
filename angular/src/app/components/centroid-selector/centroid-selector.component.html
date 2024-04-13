@@ -3,7 +3,7 @@
     <app-centroid 
       [index]="i"
       [centroid]="centroid()"
-      [isSelected]="i == this.centroidSelectorService.selectedCentroid()"
+      [isSelected]="i === this.centroidSelectorService.selectedCentroidIndex()"
       [onSelected]="this.centroidSelectorService.onCentroidSelectedBound"
       ></app-centroid>
   }

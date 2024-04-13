@@ -4,6 +4,7 @@ import { CanvasStore } from "../../services/stores/canvas.store.service";
 import { ImageDisplayInfo } from "../../models/ImageDisplayInfo";
 import { ProcessedImageStore } from "../../services/stores/processed-image.store.service";
 import { CustomError } from "../../models/CustomError";
+import { ImageSelectionItemComponent } from "./image-selection-item/image-selection-item.component";
 
 export interface MatListOptionArgs {
   name: string;
@@ -18,18 +19,21 @@ export interface MatListOptionArgs {
   imports: [
     MatSelectionList,
     MatListModule,
+    ImageSelectionItemComponent,
   ],
 })
 export class ImageSelectionComponent {
   Object = Object;
-  images: Signal<Record<string, MatListOptionArgs[]>> = computed(() => {
-    var groups: Record<string, MatListOptionArgs[]> = {};
+  images: Signal<Record<string, ImageDisplayInfo[]>> = computed(() => {
+    var groups: Record<string, ImageDisplayInfo[]> = {};
     this.processedImageStore.processedImages().map((imageDisplayInfo) => {
-      var matListOptionArgs = groups[imageDisplayInfo.group]
-      if (matListOptionArgs === undefined) {
-        groups[imageDisplayInfo.group] = [];
+      var imageDisplayInfos = groups[imageDisplayInfo.group]
+      if (imageDisplayInfos === undefined) {
+        imageDisplayInfos = [];
+        groups[imageDisplayInfo.group] = imageDisplayInfos;
       }
-      matListOptionArgs.push(this.convertToMatListOptionArgs(imageDisplayInfo));
+      //matListOptionArgs.push(this.convertToMatListOptionArgs(imageDisplayInfo));
+      imageDisplayInfos.push(imageDisplayInfo);
     });
     return groups;
   });
@@ -50,24 +54,12 @@ export class ImageSelectionComponent {
   }
 
   onSelectionChanged(selectionChange: MatSelectionListChange) {
-    var selectedImage = selectionChange.source.selectedOptions.selected[0];
-    var imageDisplayInfo = this.processedImageStore.processedImages().find((imageAndLabel) => imageAndLabel.displayLabel === selectedImage.value.name);
-    if (imageDisplayInfo === undefined) {
-      throw new CustomError("Image not found");
-    }
-    this.canvasService.displayedImage.set(imageDisplayInfo);
+    var selectedImageDisplayInfo = selectionChange.source.selectedOptions.selected[0].value;
+    this.canvasService.displayedImage.set(selectedImageDisplayInfo);
   }
 
   onImageProcessed(imageDisplayInfo: ImageDisplayInfo) {
     // FIXME: This doesn't work. idk how to manually set the MatSelectionList value
     // this.imagesList!.writeValue([imageDisplayInfo.displayLabel]);
-  }
-
-  convertToMatListOptionArgs(imageDisplayInfo: ImageDisplayInfo): MatListOptionArgs {
-    return {
-      name: imageDisplayInfo.displayLabel,
-      value: imageDisplayInfo.image,
-      disabled: imageDisplayInfo.image == null,
-    }
   }
 }

@@ -11,6 +11,8 @@ import { FixedArray } from '../models/FixedArray';
 export class CanvasService {
   readonly IDENTITY_TRANSFORM = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
   private mouseMoveSubscriber: Subscriber<MouseEvent> | null = null;
+  mouseClickListener: (this: HTMLCanvasElement, event: MouseEvent) => void = () => {};
+  mouseMovementListener: (this: HTMLCanvasElement, event: MouseEvent) => void = () => {};
 
   constructor(
     private canvasStore: CanvasStore,
@@ -133,21 +135,24 @@ export class CanvasService {
   }
 
   listenForMouseEvents() {
+    this.removeMouseEventListener();
     var context = this.canvasStore.context2D();
     if (context == null) {
       throw new Error("No context");
     }
     var mouseClickObservable = new Observable<MouseEvent>((subscriber) => {
-      context!.canvas.addEventListener('click', (event) => {
+      this.mouseClickListener = (event) => {
         subscriber.next(event);
         subscriber.complete();
-      });
+      }
+      context!.canvas.addEventListener('click', this.mouseClickListener);
     });
     var mouseMoveObservable = new Observable<MouseEvent>((subscriber) => {
-      this.mouseMoveSubscriber = subscriber;
-      context!.canvas.addEventListener('mousemove', (event) => {
+      this.mouseMovementListener = (event) => {
         subscriber.next(event);
-      });
+      }
+      this.mouseMoveSubscriber = subscriber;
+      context!.canvas.addEventListener('mousemove', this.mouseMovementListener);
     });
     this.canvasStore.areMouseEventsListening.set(true);
     return { clickEvent: mouseClickObservable, mouseMoveEvent: mouseMoveObservable };
@@ -159,8 +164,8 @@ export class CanvasService {
       throw new Error("No context");
     }
     this.canvasStore.areMouseEventsListening.set(false);
-    context.canvas.removeEventListener('onmouseclick', () => {});
-    context.canvas.removeEventListener('onmousemove', () => {});
+    context.canvas.removeEventListener('click', this.mouseClickListener);
+    context.canvas.removeEventListener('mousemove', this.mouseMovementListener);
     if (this.mouseMoveSubscriber != null) {
       this.mouseMoveSubscriber.complete();
     }

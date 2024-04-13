@@ -3,8 +3,8 @@
   @if (hasImages()) {
     @for (group of Object.entries(images()); track $index) {
       <div mat-subheader class="font-bold border-b-2 border-slate-300">{{ group[0] }}</div>
-      @for (matListOptionArgs of group[1]; track $index) {
-        <mat-list-option [value]="matListOptionArgs.value" [disabled]="matListOptionArgs.disabled">{{ matListOptionArgs.name }}</mat-list-option>
+      @for (imageDisplayInfo of group[1]; track $index) {
+        <app-image-selection-item [imageDisplayInfo]="imageDisplayInfo"></app-image-selection-item>
       }
     }
   }

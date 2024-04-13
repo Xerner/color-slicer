@@ -1,7 +1,6 @@
 <div class="shadow-inner bg-slate-300 w-full h-full flex flex-col">
   <app-display-canvas 
     class="grow"
-    [image]="this.canvasStore.displayedImage()?.image"
     [scale]="sliderValue()"
     (context)="onRawImageCanvasContextReady($event)"></app-display-canvas>
   <mat-toolbar class="gap-x-3">

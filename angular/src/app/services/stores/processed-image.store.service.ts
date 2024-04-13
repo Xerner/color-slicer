@@ -1,7 +1,7 @@
 import { ImageDisplayInfo } from "../../models/ImageDisplayInfo";
 import { FixedArray } from "../../models/FixedArray";
 import { Pixel } from "../../models/Pixel";
-import { Injectable, WritableSignal, computed, signal } from "@angular/core";
+import { Injectable, WritableSignal, signal } from "@angular/core";
 
 @Injectable({
   providedIn: 'root'
@@ -21,21 +21,23 @@ export class ProcessedImageStore {
   originalImage = signal<ImageDisplayInfo>({
     group: "Full Images",
     displayLabel: "Original Image",
-    image: null,
+    image: signal(null),
+    loading: signal(false),
     label: null,
     pixels: null
   });
   processedImage = signal<ImageDisplayInfo>({
     group: "Full Images",
     displayLabel: "Processed Image",
-    image: null,
+    image: signal(null),
+    loading: signal(false),
     label: null,
     pixels: null
   });
   processedImages = signal<ImageDisplayInfo[]>([]);
   
   initialize(originalImage: HTMLImageElement, centroids: Pixel[], labels: Set<number>) {
-    this.originalImage.set({ ...this.originalImage(), image: originalImage });
+    this.originalImage().image.set(originalImage);
     this.centroids = centroids;
     this.labels = labels;
     this.size = [originalImage.width, originalImage.height];
@@ -43,8 +45,8 @@ export class ProcessedImageStore {
   }
 
   reset() {
-    this.originalImage.set({ ...this.originalImage(), image: null });
-    this.processedImage.set({ ...this.processedImage(), image: null });
+    this.originalImage().image.set(null);
+    this.processedImage().image.set(null);
     this.processedImages.set([]);
     //this.processedImagePixels = null;
     this.centroids = [];

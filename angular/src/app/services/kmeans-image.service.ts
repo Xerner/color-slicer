@@ -1,7 +1,7 @@
-import { Observable, defer, map, merge } from "rxjs";
+import { Observable, defer, forkJoin, map, merge } from "rxjs";
 import { Pixel } from "../models/Pixel";
 import { ProcessedImageStore } from "./stores/processed-image.store.service";
-import { Injectable } from "@angular/core";
+import { Injectable, signal } from "@angular/core";
 import { KmeansService } from "./kmeans.service";
 import { CanvasService } from "./canvas.service";
 import { CanvasStore } from "./stores/canvas.store.service";
@@ -53,39 +53,46 @@ export class KmeansImageService {
     var { labels, labeledData: labeledColors, centroids } = this.kmeansService.kmeans(pixels, clusters, iterations, initialCentroids)
     var processedImage = this.processedImageStore.initialize(image, centroids as Pixel[], labels)
     this.loadingService.update("Generating Color Layers", 0);
+    var imageLabelDisplayInfos: ImageDisplayInfo[] = [];
+    imageLabelDisplayInfos.push({ 
+      displayLabel: "Original Image",
+      label: null, 
+      pixels: pixels,
+      image: signal<HTMLImageElement | null>(image),
+      loading: signal(false),
+      group: "Full Images",
+      });
     for (let label = 0; label < clusters; label++) {
       var labelMask = this.kmeansService.createMask(labeledColors, label, maskValue)
       var { labelColor, colorLayer, imageMask } = this.createColorLayer(pixels, labelMask, label)
       processedImage.labelColors.set(label, labelColor)
-      processedImage.processedImages.update(processedImages => [
-        ...processedImages,
-        { 
-          displayLabel: this.getLabelForImageSelection(this.COLOR_LAYER_LABEL, label, null),
-          label: label, 
-          pixels: colorLayer,
-          image: null,
-          group: "Color Layers",
-        },
-        { 
-          displayLabel: this.getLabelForImageSelection(this.IMAGE_MASK_LABEL, label, null),
-          label: label, 
-          pixels: imageMask,
-          image: null,
-          group: "Image Masks",
-        }
-      ])
+      imageLabelDisplayInfos.push({
+        displayLabel: this.getLabelForImageSelection(this.COLOR_LAYER_LABEL, label, null),
+        label: label, 
+        pixels: colorLayer,
+        image: signal<HTMLImageElement | null>(null),
+        loading: signal(false),
+        group: "Color Layers",
+        });
+      imageLabelDisplayInfos.push({ 
+        displayLabel: this.getLabelForImageSelection(this.IMAGE_MASK_LABEL, label, null),
+        label: label, 
+        pixels: imageMask,
+        image: signal<HTMLImageElement | null>(null),
+        loading: signal(false),
+        group: "Image Masks",
+      });
       this.loadingService.update(`Generated Color Layer ${label + 1}`, (label + 1) / clusters);
     }
-    processedImage.processedImages.update(processedImages => [
-      ...processedImages,
-      { 
-        displayLabel: "Processed Image",
-        label: null, 
-        pixels: labeledColors.map(label => processedImage.labelColors.get(label)!),
-        image: null,
-        group: "Full Images",
-      },
-    ])
+    imageLabelDisplayInfos.push({ 
+      displayLabel: "Processed Image",
+      label: null, 
+      pixels: labeledColors.map(label => processedImage.labelColors.get(label)!),
+      image: signal<HTMLImageElement | null>(null),
+      loading: signal(false),
+      group: "Full Images",
+    });
+    processedImage.processedImages.set(imageLabelDisplayInfos);
     return processedImage;
   }
 
@@ -101,27 +108,31 @@ export class KmeansImageService {
     return new Observable<void>((subscriber) => {
       // Create the processed images ImageDisplayInfo
       var imageObservables = processedImageStore.processedImages()
-        .filter(imageDisplayInfo => imageDisplayInfo.image == null && imageDisplayInfo.pixels != null)
+        .filter(imageDisplayInfo => imageDisplayInfo.image() == null && imageDisplayInfo.pixels != null)
         .map(imageDisplayInfo => this.getImageObservable(context, processedImageStore, imageDisplayInfo));
-      merge(imageObservables).subscribe({
+      forkJoin(imageObservables).subscribe({
         complete: () => {
-          processedImageStore.processedImages.update(processedImages => {
-            return processedImages.sort((a, b) => a.displayLabel.localeCompare(b.displayLabel))
-          });
+          // processedImageStore.processedImages.update(processedImages => {
+          //   return [...processedImages.sort((a, b) => a.displayLabel.localeCompare(b.displayLabel))]
+          // });
           subscriber.next();
           subscriber.complete();
         }
       })
-    }) 
+    })
   }
 
   private getImageObservable(context: CanvasRenderingContext2D, processedImageStore: ProcessedImageStore, imageDisplayInfo: ImageDisplayInfo): Observable<void> {
     var pixels2D = this.pixelsTo2D(processedImageStore, imageDisplayInfo.pixels);
-    return new Observable(subscriber => this.canvasService.createImageFromPixels(context, pixels2D).subscribe(image => {
-      imageDisplayInfo.image = image
-      subscriber.next();
-      subscriber.complete();
-    }))
+    imageDisplayInfo.loading.set(true);
+    return new Observable(subscriber => {
+      this.canvasService.createImageFromPixels(context, pixels2D).subscribe(image => {
+        imageDisplayInfo.image.set(image);
+        imageDisplayInfo.loading.set(false);
+        subscriber.next();
+        subscriber.complete();
+      })
+    })
   }
 
   private getAveragePixel(pixels: Pixel[], ignoreValue: Pixel, ignoreAlpha = true): Pixel {
