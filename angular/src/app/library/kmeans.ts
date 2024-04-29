@@ -1,14 +1,11 @@
-import { Injectable } from '@angular/core';
-import { Vector } from '../models/Vector';
-import { LoadingService } from './loading.service';
 import { DateTime } from 'luxon';
+import { ProgressUpdate } from '../models/ProgressUpdate';
+import { Vector } from '../models/Vector';
+import { KmeansResults } from '../models/Kmeans';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class KmeansService {
+export class Kmeans {
   constructor(
-    private loadingService: LoadingService,
+    private progressUpdateFunc: (progressUpdate: ProgressUpdate) => void,
   ) { }
 
   createMask<T>(array: T[], dontMask: T, maskValue: T): T[] {
@@ -19,16 +16,17 @@ export class KmeansService {
   /**
    * @param clusters number of clusters/centroids to calculate
    * @param epochs number of calculation iterations
+   * @param initialCentroids the starting centroids. Bias is largely based around these values
    */
-  kmeans(data: Vector[], clusters: number, epochs: number, initialCentroids: Vector[] | null = null) {
+  kmeans(data: Vector[], clusters: number, epochs: number, initialCentroids: Vector[] | null = null): KmeansResults {
     var centroids = this.initializeCentroids(data, clusters, initialCentroids)
     var prevCentroids = [...centroids]
     var distances = this.getDistancesFromCentroids(data, centroids, this.euclideanDistance)
     var labeledData = this.getLabeledData(distances)
 
     // Learnin time
-    this.loadingService.updateHeader("Generating Kmeans Clusters");
-    this.loadingService.resetTime();
+    this.progressUpdateFunc({ header: "Generating Kmeans Clusters" });
+    this.progressUpdateFunc({ eta: DateTime.now() });
     for (let i = 0; i < epochs; i++) {
       // We re-calculate our centroids every iteration
       centroids = []
@@ -51,7 +49,7 @@ export class KmeansService {
 
       // var timePassed = Math.abs(time.diffNow("milliseconds").milliseconds)
       // this.loadingService.update(`Epoch ${i}, ${timePassed.toFixed(2)} sec`, i / epochs);
-      this.loadingService.update(`Epoch ${i}`, i / epochs);
+      this.progressUpdateFunc({ message: `Epoch ${i}`, progress: i / epochs });
     }
     var labels = new Set(labeledData)
     return { labels, labeledData, centroids }

@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { LoadingStore } from "./stores/loading.store.service";
 import { DateTime } from "luxon";
+import { ProgressUpdate } from "../models/ProgressUpdate";
 
 @Injectable({
   providedIn: "root"
@@ -8,38 +9,54 @@ import { DateTime } from "luxon";
 export class LoadingService {
   constructor(
     private loadingStore: LoadingStore,
-  ) { }
+  ) {}
 
-  updateHeader(header: string) {
+  update(update: ProgressUpdate) {
+    this.updateHeader(update.header);
+    this.updateMessage(update.message);
+    this.updateProgress(update.progress);
+    this.updateTime(update.eta);
+    console.log("Progress update", update);
+  }
+
+  updateHeader(header: string | undefined) {
+    if (header === undefined) {
+      return;
+    }
     this.loadingStore.header.set(header);
   }
 
-  resetTime() {
-    this.loadingStore.time = DateTime.now();
-  }
-
-  update(message: string, progress: number = 0, eta: Date | null = null) {
-    this.updateMessage(message);
-    this.updateProgress(progress);
-    // this.loadingStore.eta.set(eta);
-    console.log(`${this.loadingStore.message()}, \t${this.loadingStore.progress()}% \t${this.loadingStore.timePassed} ms \tETA: ${eta}`);
-  }
-
-  updateMessage(message: string) {
+  updateMessage(message: string | undefined) {
+    if (message === undefined) {
+      return;
+    }
     this.loadingStore.message.set(message);
   }
 
-  updateProgress(progress: number) {
+  updateProgress(progress: number | undefined) {
+    if (progress === undefined) {
+      return;
+    }
     if (Math.log10(progress) < 1) {
       progress = progress * 100
     }
-    this.loadingStore.timePassed = Math.abs(this.loadingStore.time.diffNow("milliseconds").milliseconds);
-    this.resetTime();
+    // var currentTime = this.loadingStore.time();
+    // if (currentTime == null) {
+
+    // }
+    // this.loadingStore.timePassed = Math.abs(currentTime.diffNow("milliseconds").milliseconds);
+    // this.resetTime();
     this.loadingStore.progress.set(progress);
   }
 
+  updateTime(time: DateTime | undefined) {
+    if (time === undefined) {
+      return;
+    }
+    this.loadingStore.time.set(time);
+  }
+
   reset() {
-    this.loadingStore.message.set("");
-    this.loadingStore.progress.set(0);
+    this.loadingStore.reset();
   }
 }

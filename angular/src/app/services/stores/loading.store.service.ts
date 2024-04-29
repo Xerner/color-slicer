@@ -10,7 +10,7 @@ export class LoadingStore {
   header = signal("");
   message = signal("");
   timer = new Timer();
-  time = DateTime.now();
+  time = signal<DateTime | null>(DateTime.now());
   timePassed = 0;
   // eta = DateTime.now();
 
@@ -19,6 +19,6 @@ export class LoadingStore {
     this.header.set("");
     this.message.set("");
     this.timer.stop();
-    this.time = DateTime.now();
+    this.time.set(null);
   }
 }

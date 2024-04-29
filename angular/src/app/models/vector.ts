@@ -1,4 +1,8 @@
 export class Vector extends Array<number> {
+  static fromArray(array: number[]): Vector {
+    return new Vector(...array);
+  }
+
   add(a: Vector): Vector {
     return this.map((value, i) => value + a[i]) as Vector;
   }
