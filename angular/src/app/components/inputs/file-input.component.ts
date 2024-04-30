@@ -75,4 +75,9 @@ export class FileInputComponent implements ControlValueAccessor {
   public onBlur(): void {
     this.onTouched();
   }
+
+  handleClick(event: Event) {
+    event.stopPropagation();
+    this.fileInput.click();
+  }
 }

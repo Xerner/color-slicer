@@ -19,6 +19,7 @@ import { CanvasService } from '../../services/canvas.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LoadingStore } from '../../services/stores/loading.store.service';
+import { StatisticsComponent } from '../statistics/statistics.component';
 
 @Component({
   selector: 'app-user-input-page',
@@ -35,6 +36,7 @@ import { LoadingStore } from '../../services/stores/loading.store.service';
     CentroidSelectorComponent,
     MatIconModule,
     MatTooltipModule,
+    StatisticsComponent
   ],
   providers: [
     {

@@ -1,0 +1,18 @@
+<div class="grid grid-cols-1 xs:grid-cols-1">
+  <div>
+    <div class="font-medium border-b mb-1">Statistics</div>
+    <div class="grid grid-cols-4 gap-1 xs:grid-cols-2">
+      <div class="col-span-1">Pixels</div>
+      <div class="col-span-3 xs:col-span-1">
+        {{ processedImageStore.getOriginalImage()?.pixels?.length }}
+      </div>
+    </div>
+  </div>
+  <!-- <div>
+    <div class="font-medium border-b mb-1">Runtime</div>
+    <div class="grid grid-cols-2 gap-1">
+      <div>ETA</div>
+      <div></div>
+    </div>
+  </div> -->
+</div>
