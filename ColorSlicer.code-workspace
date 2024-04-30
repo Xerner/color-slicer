@@ -3,18 +3,6 @@
     {
       "name": "ColorSlicer",
       "path": "."
-    },
-    {
-      "name": "angular",
-      "path": "angular"
-    },
-    {
-      "name": "app",
-      "path": "angular/src/app"
-    },
-    {
-      "name": "python",
-      "path": "python"
     }
   ],
   "settings": {}
