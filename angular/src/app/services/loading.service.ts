@@ -2,6 +2,8 @@ import { Injectable } from "@angular/core";
 import { LoadingStore } from "./stores/loading.store.service";
 import { DateTime } from "luxon";
 import { ProgressUpdate } from "../models/ProgressUpdate";
+import { clamp } from "../library/math";
+import { TimePipe } from "../pipes/time.pipe";
 
 @Injectable({
   providedIn: "root"
@@ -10,6 +12,22 @@ export class LoadingService {
   constructor(
     private loadingStore: LoadingStore,
   ) {}
+
+  start() {
+    this.loadingStore.header.set("");
+    this.loadingStore.message.set("");
+    this.loadingStore.isLoading.set(true);
+    this.loadingStore.timer.start();
+  }
+
+  finish() {
+    var finishedTimeStr = this.loadingStore.timer.time()?.toLocaleString(TimePipe.DEFAULT_FORMAT);
+    this.loadingStore.header.set(`Finished in ${finishedTimeStr}`);
+    this.loadingStore.message.set("");
+    this.loadingStore.isLoading.set(false);
+    this.loadingStore.eta.set(null);
+    this.loadingStore.timer.stop();
+  }
 
   update(update: ProgressUpdate) {
     this.updateHeader(update.header);
@@ -37,15 +55,7 @@ export class LoadingService {
     if (progress === undefined) {
       return;
     }
-    if (Math.log10(progress) < 1) {
-      progress = progress * 100
-    }
-    // var currentTime = this.loadingStore.time();
-    // if (currentTime == null) {
-
-    // }
-    // this.loadingStore.timePassed = Math.abs(currentTime.diffNow("milliseconds").milliseconds);
-    // this.resetTime();
+    progress = clamp(progress * 100, 0, 100)
     this.loadingStore.progress.set(progress);
   }
 
@@ -53,7 +63,7 @@ export class LoadingService {
     if (time === undefined) {
       return;
     }
-    this.loadingStore.time.set(time);
+    this.loadingStore.eta.set(time);
   }
 
   reset() {

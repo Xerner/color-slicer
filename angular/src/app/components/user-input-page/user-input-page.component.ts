@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, computed } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FileInputComponent } from '../inputs/file-input.component';
@@ -18,6 +18,7 @@ import { CentroidSelectorComponent } from '../centroid-selector/centroid-selecto
 import { CanvasService } from '../../services/canvas.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { LoadingStore } from '../../services/stores/loading.store.service';
 
 @Component({
   selector: 'app-user-input-page',
@@ -48,6 +49,10 @@ export class UserInputPageComponent {
     file: new FormControl<File | null>(null, Validators.required),
   });
 
+  isReadyForKmeans = computed(() => {
+    return !this.loadingStore.isLoading() && this.kmeansForm.form.valid;
+  })
+
   @ViewChild(MatStepper, { static: true }) 
   stepper!: MatStepper;
 
@@ -57,6 +62,7 @@ export class UserInputPageComponent {
     private processedImageStore: ProcessedImageStore,
     private fileService: FileService,
     private kmeansImageService: KmeansImageService,
+    protected loadingStore: LoadingStore,
     protected kmeansForm: KMeansFormService,
   ) { }
 
@@ -74,12 +80,16 @@ export class UserInputPageComponent {
   reset() {
     this.canvasService.reset();
     this.processedImageStore.reset();
-    // this.stepper.reset();
-    this.kmeansForm.form.controls.iterations.setValue(10);
+    this.handleReset();
   }
 
-  isReadyForKmeans() {
-    return this.kmeansForm.form.valid;
+  handleReset() {
+    this.stepper.reset();
+    this.fileForm.reset();
+    this.loadingStore.reset()
+    this.kmeansImageService.reset()
+    this.kmeansForm.form.controls.clusters.setValue(4);
+    this.kmeansForm.form.controls.iterations.setValue(10);
   }
 
   generateKmeansImages() {

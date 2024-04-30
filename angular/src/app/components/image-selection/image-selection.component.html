@@ -4,7 +4,9 @@
     @for (group of Object.entries(images()); track $index) {
       <div mat-subheader class="font-bold border-b-2 border-slate-300">{{ group[0] }}</div>
       @for (imageDisplayInfo of group[1]; track $index) {
-        <app-image-selection-item [imageDisplayInfo]="imageDisplayInfo"></app-image-selection-item>
+        <mat-list-option [value]="imageDisplayInfo" [disabled]="imageDisplayInfo.image() == null">
+          <app-image-selection-item [imageDisplayInfo]="imageDisplayInfo"></app-image-selection-item>
+        </mat-list-option>
       }
     }
   }

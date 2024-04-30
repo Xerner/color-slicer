@@ -27,13 +27,7 @@ export class ImageSelectionComponent {
   images: Signal<Record<string, ImageDisplayInfo[]>> = computed(() => {
     var groups: Record<string, ImageDisplayInfo[]> = {};
     this.processedImageStore.processedImages().map((imageDisplayInfo) => {
-      var imageDisplayInfos = groups[imageDisplayInfo.group]
-      if (imageDisplayInfos === undefined) {
-        imageDisplayInfos = [];
-        groups[imageDisplayInfo.group] = imageDisplayInfos;
-      }
-      //matListOptionArgs.push(this.convertToMatListOptionArgs(imageDisplayInfo));
-      imageDisplayInfos.push(imageDisplayInfo);
+      this.addToImageDisplayGroup(imageDisplayInfo, groups);
     });
     return groups;
   });
@@ -52,5 +46,15 @@ export class ImageSelectionComponent {
   onSelectionChanged(selectionChange: MatSelectionListChange) {
     var selectedImageDisplayInfo = selectionChange.source.selectedOptions.selected[0].value;
     this.canvasService.displayedImage.set(selectedImageDisplayInfo);
+  }
+
+  addToImageDisplayGroup(imageDisplayInfo: ImageDisplayInfo, groups: Record<string, ImageDisplayInfo[]>) {
+    var imageDisplayInfos = groups[imageDisplayInfo.group]
+    if (imageDisplayInfos === undefined) {
+      imageDisplayInfos = [];
+      groups[imageDisplayInfo.group] = imageDisplayInfos;
+    }
+    imageDisplayInfos.push(imageDisplayInfo);
+
   }
 }

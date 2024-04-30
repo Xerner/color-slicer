@@ -11,6 +11,8 @@ import { CustomError } from "../models/CustomError";
 import { Kmeans } from "../library/kmeans";
 import { KmeansMessageType, KmeansWorkerMessage } from "../kmeans.worker";
 import { KmeansArgs } from "../models/Kmeans";
+import { ProgressUpdate } from "../models/ProgressUpdate";
+import { DateObjectUnits, DateTime } from "luxon";
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +21,7 @@ export class KmeansImageService {
   readonly COLOR_LAYER_LABEL = "Color Layer {}";
   readonly IMAGE_MASK_LABEL = "Image Mask {}";
   readonly kmeans: Kmeans;
+  private kmeansWorker: Worker | null = null;
 
   constructor(
     private canvasService: CanvasService,
@@ -37,6 +40,7 @@ export class KmeansImageService {
     }
     var imageData = this.canvasService.getImageDataFromImage(context2D, image);
     var initialCentroids = this.processedImageStore.initialCentroids().map(centroid => centroid());
+    this.loadingService.start();
     this.createKmeansImages(imageData, clusters, iterations, initialCentroids, maskValue).subscribe(() => {
       var context2D = this.canvasStore.context2D();
       if (context2D == null) {
@@ -66,15 +70,15 @@ export class KmeansImageService {
   }
 
   private createKmeansImagesAsync(pixels: Pixel[], clusters: number, iterations: number, initialCentroids: Pixel[] | null, maskValue: number | null, subscriber: Subscriber<void>) {
-    var kmeansWorker = new Worker(new URL('../kmeans.worker', import.meta.url));
-    kmeansWorker.onmessage = this.receiveKmeansMessage.bind(this, pixels, maskValue, subscriber);
+    this.kmeansWorker = new Worker(new URL('../kmeans.worker', import.meta.url));
+    this.kmeansWorker.onmessage = this.receiveKmeansMessage.bind(this, pixels, maskValue, subscriber);
     var args: KmeansArgs = { 
       data: pixels, 
       clusters, 
       epochs: iterations, 
       initialCentroids,
     }
-    kmeansWorker.postMessage(args);
+    this.kmeansWorker.postMessage(args);
   }
 
   private createKmeansImagesSync(pixels: Pixel[], clusters: number, iterations: number, initialCentroids: Pixel[] | null, maskValue: number | null, subscriber: Subscriber<void>) {
@@ -86,6 +90,13 @@ export class KmeansImageService {
 
   private receiveKmeansMessage(pixels: Pixel[], maskValue: number | null, subscriber: Subscriber<void>, message: MessageEvent<KmeansWorkerMessage>) {
     if (message.data.type == KmeansMessageType.UPDATE) {
+      var kmeansUpdate: ProgressUpdate = {
+        header: message.data.response.header,
+        message: message.data.response.message,
+        progress: message.data.response.progress,
+        eta: DateTime.fromObject(message.data.response.eta as DateObjectUnits),
+      };
+      this.loadingService.update(message.data.response);
       return;
     }
     var { labels, labeledData, centroids } = message.data.response;
@@ -147,6 +158,7 @@ export class KmeansImageService {
         //   loadingCount++;
         // },
         complete: () => {
+          this.loadingService.finish();
           subscriber.next();
           subscriber.complete();
         }
@@ -201,5 +213,10 @@ export class KmeansImageService {
     var { imageData } = this.canvasService.getImageData(context)
     var pixels = this.canvasService.imageDataToPixels(imageData)
     return this.kmeans.getRandomInitialCentroids(pixels, count);
+  }
+
+  reset() {
+    this.processedImageStore.reset();
+    this.kmeansWorker?.terminate();
   }
 }

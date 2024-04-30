@@ -6,19 +6,19 @@ import { DateTime } from "luxon";
   providedIn: 'root'
 })
 export class LoadingStore {
+  isLoading = signal(false);
   progress = signal(0);
   header = signal("");
   message = signal("");
   timer = new Timer();
-  time = signal<DateTime | null>(DateTime.now());
-  timePassed = 0;
-  // eta = DateTime.now();
+  eta = signal<DateTime | null>(null);
 
   reset() {
     this.progress.set(0);
     this.header.set("");
     this.message.set("");
     this.timer.stop();
-    this.time.set(null);
+    this.eta.set(null);
+    this.isLoading.set(false);
   }
 }
