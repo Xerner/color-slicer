@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Deploy static content to Pages
+name: Deploy Angular app to Pages
 
 # Controls when the workflow will run
 on:
@@ -30,9 +30,14 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
-
-      - name: Build app
-        run: ng build
+      - name: Use Node.js 18.19.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.19.1
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --if-present
+      # - run: npm test
 
   # Single deploy job since we're just deploying
   deploy:
@@ -49,7 +54,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository
-          path: './dist'
+          path: './github'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
