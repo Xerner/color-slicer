@@ -5,11 +5,12 @@ export interface KmeansArgs {
   data: Vector[];
   clusters: number;
   epochs: number;
-  initialCentroids: Vector[] | null;
+  initialCentroids: Vector[];
+  ignoreValue: Vector | null;
 }
 
 export interface KmeansResults {
   labels: Set<number>;
-  labeledData: number[];
+  labeledData: (number | null)[];
   centroids: Vector[];
 }

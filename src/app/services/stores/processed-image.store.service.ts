@@ -44,7 +44,7 @@ export class ProcessedImageStore {
   initialCentroids = signal<WritableSignal<Pixel>[]>([]);
   centroids: Pixel[] = [];
   labels: Set<number> = new Set();
-  labelColors = new Map<number, Pixel>();
+  labelColors = new Map<number | null, Pixel>();
   labeledColors: number[] = [];
 
   size: FixedArray<number, 2> = [0, 0];

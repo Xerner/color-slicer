@@ -3,6 +3,9 @@ import { ProgressUpdate } from '../models/ProgressUpdate';
 import { Vector } from '../models/Vector';
 import { KmeansResults } from '../models/Kmeans';
 
+type ignored = null;
+const IGNORED = null;
+
 export class Kmeans {
   constructor(
     private progressUpdateFunc: (progressUpdate: ProgressUpdate) => void,
@@ -18,10 +21,10 @@ export class Kmeans {
    * @param epochs number of calculation iterations
    * @param initialCentroids the starting centroids. Bias is largely based around these values
    */
-  kmeans(data: Vector[], clusters: number, epochs: number, initialCentroids: Vector[] | null = null): KmeansResults {
+  kmeans(data: Vector[], clusters: number, epochs: number, initialCentroids: Vector[] | null, ignoreValue: Vector | null): KmeansResults {
     var centroids = this.initializeCentroids(data, clusters, initialCentroids)
     var prevCentroids = [...centroids]
-    var distances = this.getDistancesFromCentroids(data, centroids, this.euclideanDistance)
+    var distances = this.getDistancesFromCentroids(data, centroids, this.euclideanDistance, ignoreValue)
     var labeledData = this.getLabeledData(distances)
 
     // Learnin time
@@ -30,12 +33,12 @@ export class Kmeans {
     for (let i = 0; i < epochs; i++) {
       // We re-calculate our centroids every iteration
       centroids = []
-      for (let j = 0; j < clusters; j++) {
+      for (let label = 0; label < clusters; label++) {
         // Re-calculate our centroids by taking the mean of the cluster it belongs to
-        var onlyClusterData = data.filter((_, i) => labeledData[i] == j)
+        var onlyClusterData = data.filter((_, i) => labeledData[i] == label)
         if (onlyClusterData.length == 0) {
-          centroids.push(prevCentroids[j])
-          console.warn(`Cluster ${j} had no data on epoch ${i}. This means bad centroid initialization, or there are less natural clusters than requested.`)
+          centroids.push(prevCentroids[label])
+          console.warn(`Cluster ${label} had no data on epoch ${i}. This means bad centroid initialization, or there are less natural clusters than requested.`)
           continue
         }
         var avgCentroid = onlyClusterData
@@ -44,15 +47,16 @@ export class Kmeans {
         centroids.push(avgCentroid)
       }
 
-      distances = this.getDistancesFromCentroids(data, centroids, this.euclideanDistance)
+      distances = this.getDistancesFromCentroids(data, centroids, this.euclideanDistance, ignoreValue)
       labeledData = this.getLabeledData(distances)
 
       // var timePassed = Math.abs(time.diffNow("milliseconds").milliseconds)
       // this.loadingService.update(`Epoch ${i}, ${timePassed.toFixed(2)} sec`, i / epochs);
       this.progressUpdateFunc({ message: `Epoch ${i}`, progress: i / epochs });
     }
-    var labels = new Set(labeledData)
-    return { labels, labeledData, centroids }
+    var noIgnoredLabeledData = labeledData.map(label => label === IGNORED ? IGNORED : label)
+    var labels = new Set(noIgnoredLabeledData.filter(label => label !== IGNORED) as number[])
+    return { labels, labeledData: noIgnoredLabeledData, centroids }
   }
 
   private initializeCentroids(data: Vector[], clusters: number, initialCentroids: Vector[] | null) {
@@ -80,8 +84,12 @@ export class Kmeans {
    * @param distanceFunction A function that returns the distance between two data points of type T
    * @returns An array of size data.length x centroids.length containing the distance between each data point and each centroid
    */
-  private getDistancesFromCentroids(data: Vector[], centroids: Vector[], distanceFunction: (a: Vector, b: Vector) => number): number[][] {
-    var distances = data.map(point => centroids.map(centroid => distanceFunction(point, centroid)));
+  private getDistancesFromCentroids(data: Vector[], centroids: Vector[], distanceFunction: (a: Vector, b: Vector) => number, ignoreValue: Vector | null): (number[] | ignored)[] {
+    var distances = data.map(point => {
+      return this.shouldIgnore(point, ignoreValue) 
+           ? IGNORED
+           : centroids.map(centroid => distanceFunction(point, centroid))
+    });
     return distances
   }
 
@@ -93,7 +101,14 @@ export class Kmeans {
    * For each grouping of distances from the centroids, returns the index of the smallest distance. 
    * This represents the cluster, or label of the data point
    */
-  private getLabeledData(distances: number[][]): number[] {
-    return distances.map(distance => distance.indexOf(Math.min(...distance)));
+  private getLabeledData(distances: (number[] | ignored)[]): (number | ignored)[] {
+    return distances.map(distance => distance == null ? IGNORED : distance.indexOf(Math.min(...distance)));
+  }
+
+  private shouldIgnore(data: Vector | ignored, ignoreValue: Vector | ignored): boolean {
+    if (ignoreValue === IGNORED || data === IGNORED) {
+      return data === IGNORED;
+    }
+    return data.equals(ignoreValue);
   }
 }

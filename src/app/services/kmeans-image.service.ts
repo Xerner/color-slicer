@@ -14,6 +14,8 @@ import { KmeansArgs } from "../models/Kmeans";
 import { ProgressUpdate } from "../models/ProgressUpdate";
 import { DateObjectUnits, DateTime } from "luxon";
 
+export const IGNORE_PIXEL = new Pixel(0, 0, 0, 0);
+
 @Injectable({
   providedIn: 'root'
 })
@@ -58,7 +60,7 @@ export class KmeansImageService {
     this.canvasStore.displayedImage.set(processedImage);
   }
 
-  private createKmeansImages(imageData: ImageData, clusters: number, iterations: number, initialCentroids: Pixel[] | null, maskValue: number | null): Observable<void> {
+  private createKmeansImages(imageData: ImageData, clusters: number, iterations: number, initialCentroids: Pixel[], maskValue: number | null): Observable<void> {
     return new Observable((subscriber) => {
       var pixels = this.canvasService.imageDataToPixels(imageData)
       if (typeof Worker !== 'undefined') {
@@ -69,7 +71,7 @@ export class KmeansImageService {
     })
   }
 
-  private createKmeansImagesAsync(pixels: Pixel[], clusters: number, iterations: number, initialCentroids: Pixel[] | null, maskValue: number | null, subscriber: Subscriber<void>) {
+  private createKmeansImagesAsync(pixels: Pixel[], clusters: number, iterations: number, initialCentroids: Pixel[], maskValue: number | null, subscriber: Subscriber<void>) {
     this.kmeansWorker = new Worker(new URL('../kmeans.worker', import.meta.url));
     this.kmeansWorker.onmessage = this.receiveKmeansMessage.bind(this, pixels, maskValue, subscriber);
     var args: KmeansArgs = { 
@@ -77,12 +79,13 @@ export class KmeansImageService {
       clusters, 
       epochs: iterations, 
       initialCentroids,
+      ignoreValue: IGNORE_PIXEL,
     }
     this.kmeansWorker.postMessage(args);
   }
 
   private createKmeansImagesSync(pixels: Pixel[], clusters: number, iterations: number, initialCentroids: Pixel[] | null, maskValue: number | null, subscriber: Subscriber<void>) {
-    var { labels, labeledData, centroids } = this.kmeans.kmeans(pixels, clusters, iterations, initialCentroids);
+    var { labels, labeledData, centroids } = this.kmeans.kmeans(pixels, clusters, iterations, initialCentroids, IGNORE_PIXEL);
     this.processKmeansDataToImages(pixels, labels, labeledData, centroids as Pixel[], maskValue);
     subscriber.next();
     subscriber.complete();
@@ -105,11 +108,12 @@ export class KmeansImageService {
     subscriber.complete();
   }
 
-  private processKmeansDataToImages(pixels: Pixel[], labels: Set<number>, labeledColors: number[], centroids: Pixel[], maskValue: number | null) {
+  private processKmeansDataToImages(pixels: Pixel[], labels: Set<number>, labeledColors: (number | null)[], centroids: Pixel[], maskValue: number | null) {
     var processedImageStore = this.processedImageStore.initializeForProcessing(centroids as Pixel[], labels)
     this.loadingService.update({ message: "Generating Color Layers", progress: 0 });
     var imageLabelDisplayInfos: ImageDisplayInfo[] = processedImageStore.processedImages();
     
+    processedImageStore.labelColors.set(null, IGNORE_PIXEL)
     for (let label = 0; label < labels.size; label++) {
       var labelMask = this.kmeans.createMask(labeledColors, label, maskValue)
       var { labelColor, colorLayer, imageMask } = this.createColorLayer(pixels, labelMask, label)
@@ -138,7 +142,7 @@ export class KmeansImageService {
   }
 
   // TODO: add methods for swapping out how color replacement happens
-  private createColorLayer(pixels: Pixel[], colorLabels: (number | null)[], targetLabel: number, emptyPixel = new Pixel(0, 0, 0, 0)) {
+  private createColorLayer(pixels: Pixel[], colorLabels: (number | null)[], targetLabel: number, emptyPixel = IGNORE_PIXEL) {
     var imageMask = colorLabels.map((label, i) => label === targetLabel ? pixels[i] : emptyPixel);
     var labelColor = this.getAveragePixel(imageMask, emptyPixel);
     var colorLayer = pixels.map((_, i) => colorLabels[i] === targetLabel ? labelColor : emptyPixel);

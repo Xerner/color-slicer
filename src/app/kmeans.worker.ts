@@ -21,11 +21,11 @@ export type KmeansWorkerMessage = {
 addEventListener('message', startKmeans);
 
 function startKmeans(kmeansMessage: MessageEvent<KmeansArgs>) {
-  var { data, clusters, epochs, initialCentroids } = kmeansMessage.data;
+  var { data, clusters, epochs, initialCentroids, ignoreValue } = kmeansMessage.data;
   var vectorData = data.map(vector => Vector.fromArray(vector));
-  var vectorInitialCentroids = initialCentroids?.map(vector => Vector.fromArray(vector));
+  var vectorInitialCentroids = initialCentroids.map(vector => Vector.fromArray(vector));
   var kmeans = new Kmeans(postUpdate);
-  var kmeansResults = kmeans.kmeans(vectorData, clusters, epochs, vectorInitialCentroids);
+  var kmeansResults = kmeans.kmeans(vectorData, clusters, epochs, vectorInitialCentroids, ignoreValue);
   postResults(kmeansResults)
   close();
 }

@@ -3,6 +3,10 @@ export class Vector extends Array<number> {
     return new Vector(...array);
   }
 
+  equals(a: Vector): boolean {
+    return this.every((value, i) => value === a[i]);
+  }
+
   add(a: Vector): Vector {
     return this.map((value, i) => value + a[i]) as Vector;
   }
