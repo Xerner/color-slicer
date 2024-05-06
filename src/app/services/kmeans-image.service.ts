@@ -76,11 +76,11 @@ export class KmeansImageService {
     this.kmeansWorker = new Worker(new URL('../kmeans.worker', import.meta.url));
     this.kmeansWorker.onmessage = this.receiveKmeansMessage.bind(this, pixels, maskValue, subscriber);
     var args: KmeansArgs = { 
-      data: pixels, 
+      data: pixels.map(pixel => pixel.toArray()), 
       clusters, 
       epochs: iterations, 
-      initialCentroids,
-      ignoreValue: IGNORE_PIXEL,
+      initialCentroids: initialCentroids.map(pixel => pixel.toArray()),
+      ignoreValue: IGNORE_PIXEL.toArray()
     }
     this.kmeansWorker.postMessage(args);
   }
@@ -98,9 +98,9 @@ export class KmeansImageService {
         header: message.data.response.header,
         message: message.data.response.message,
         progress: message.data.response.progress,
-        eta: DateTime.fromObject(message.data.response.eta as DateObjectUnits),
+        eta: message.data.response.eta,
       };
-      this.loadingService.update(message.data.response);
+      this.loadingService.update(kmeansUpdate);
       return;
     }
     var { labels, labeledData, centroids } = message.data.response;
@@ -115,39 +115,53 @@ export class KmeansImageService {
     var imageLabelDisplayInfos: ImageDisplayInfo[] = processedImageStore.processedImages();
     
     processedImageStore.labelColors.set(null, IGNORE_PIXEL)
-    for (let label = 0; label < labels.size; label++) {
+    var labelsArr = this.getContiguousLabels(labels, centroids);
+    for (let i = 0; i < labelsArr.length; i++) {
+      var label = labelsArr[i];
       var labelMask = this.kmeans.createMask(labeledColors, label, maskValue)
       var { labelColor, colorLayer, imageMask } = this.createColorLayer(pixels, labelMask, label)
-      processedImageStore.labelColors.set(label, labelColor)
+      if (labelColor !== null) {
+        processedImageStore.labelColors.set(label, labelColor)
+      }
       imageLabelDisplayInfos.push({
-        displayLabel: this.getLabelForImageSelection(this.COLOR_LAYER_LABEL, label, null),
+        displayLabel: this.getLabelForImageSelection(this.COLOR_LAYER_LABEL, i),
         label: label, 
-        pixels: colorLayer,
+        pixels: label !== null ? colorLayer : null,
         image: signal<HTMLImageElement | null>(null),
         loading: signal(false),
         group: "Color Layers",
       });
       imageLabelDisplayInfos.push({ 
-        displayLabel: this.getLabelForImageSelection(this.IMAGE_MASK_LABEL, label, null),
+        displayLabel: this.getLabelForImageSelection(this.IMAGE_MASK_LABEL, i),
         label: label, 
-        pixels: imageMask,
+        pixels: label !== null ? imageMask : null,
         image: signal<HTMLImageElement | null>(null),
         loading: signal(false),
         group: "Image Masks",
       });
-      this.loadingService.update({ message: `Generated Color Layer ${label + 1}`, progress: (label + 1) / labels.size });
+      this.loadingService.update({ message: `Generated Color Layer ${i + 1}`, progress: (i + 1) / labelsArr.length });
     }
     var processedImagePixels = labeledColors.map(label => processedImageStore.labelColors.get(label)!)
     imageLabelDisplayInfos.splice(1, 0, processedImageStore.getNewProcessedImage(processedImagePixels));
     processedImageStore.processedImages.set([...imageLabelDisplayInfos]);
   }
 
+  private getContiguousLabels(labels: Set<number>, centroids: Pixel[]): (number | null)[] {
+    var labelsArr = new Array(centroids.length).fill(null).map((label, i) => {
+      return labels.has(i) ? i : null;
+    });
+    return labelsArr;
+  }
+
   // TODO: add methods for swapping out how color replacement happens
-  private createColorLayer(pixels: Pixel[], colorLabels: (number | null)[], targetLabel: number, emptyPixel = IGNORE_PIXEL) {
+  private createColorLayer(pixels: Pixel[], colorLabels: (number | null)[], targetLabel: number | null, emptyPixel = IGNORE_PIXEL) {
+    if (targetLabel === null) {
+      return { labelColor: null, colorLayer: null, imageMask: null };
+    }
     var imageMask = colorLabels.map((label, i) => label === targetLabel ? pixels[i] : emptyPixel);
     var labelColor = this.getAveragePixel(imageMask, emptyPixel);
     var colorLayer = pixels.map((_, i) => colorLabels[i] === targetLabel ? labelColor : emptyPixel);
-    return { labelColor, colorLayer, imageMask }
+    return { labelColor, colorLayer, imageMask };
   }
 
   private loadKmeansImages(context: CanvasRenderingContext2D, processedImageStore: ProcessedImageStore) {
@@ -199,7 +213,7 @@ export class KmeansImageService {
     return averagePixel;
   }  
 
-  getLabelForImageSelection(formatString: string, label: number, image: HTMLImageElement | null) {
+  getLabelForImageSelection(formatString: string, label: number) {
     return formatString.replace("{}", (label + 1).toString());
   }
 

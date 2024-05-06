@@ -2,11 +2,11 @@ import { ProgressUpdateFunc } from "./ProgressUpdate";
 import { Vector } from "./Vector";
 
 export interface KmeansArgs {
-  data: Vector[];
+  data: number[][];
   clusters: number;
   epochs: number;
-  initialCentroids: Vector[];
-  ignoreValue: Vector | null;
+  initialCentroids: number[][];
+  ignoreValue: number[] | null;
 }
 
 export interface KmeansResults {

@@ -31,7 +31,7 @@ export class Kmeans {
 
     // Learnin time
     this.progressUpdateFunc({ header: "Generating Kmeans Clusters" });
-    this.progressUpdateFunc({ eta: DateTime.now() });
+    this.progressUpdateFunc({ eta: DateTime.now().toISO() });
     for (let i = 0; i < epochs; i++) {
       // We re-calculate our centroids every iteration
       centroids = []
@@ -48,12 +48,8 @@ export class Kmeans {
           .divide(data.length)
         centroids.push(avgCentroid)
       }
-
       distances = this.getDistancesFromCentroids(data, centroids, this.euclideanDistance, ignoreValue)
       labeledData = this.getLabeledData(distances)
-
-      // var timePassed = Math.abs(time.diffNow("milliseconds").milliseconds)
-      // this.loadingService.update(`Epoch ${i}, ${timePassed.toFixed(2)} sec`, i / epochs);
       this.progressUpdateFunc({ message: `Epoch ${i}`, progress: i / epochs });
     }
     var noIgnoredLabeledData = labeledData.map(label => label === IGNORED ? IGNORED : label)

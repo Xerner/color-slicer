@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Pixel } from '../models/Pixel';
+import { Pixel, PixelRGBA } from '../models/Pixel';
 import { Observable, Subscriber, combineLatest, filter } from 'rxjs';
 import { CanvasStore } from './stores/canvas.store.service';
 import { ArrayService } from './arrays.service';
@@ -10,6 +10,8 @@ import { FixedArray } from '../models/FixedArray';
 })
 export class CanvasService {
   readonly IDENTITY_TRANSFORM = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  /** RGBA color channels */
+  readonly EXPECTED_PIXEL_LENGTH = 4;
   private mouseMoveSubscriber: Subscriber<MouseEvent> | null = null;
   mouseClickListener: (this: HTMLCanvasElement, event: MouseEvent) => void = () => {};
   mouseMovementListener: (this: HTMLCanvasElement, event: MouseEvent) => void = () => {};
@@ -100,6 +102,11 @@ export class CanvasService {
     }
     pixels.forEach((pixelRow, i) => {
       pixelRow.forEach((pixel, j) => {
+        if (pixel.length < this.EXPECTED_PIXEL_LENGTH) {
+          pixel = this.correctPixelForDrawing(pixel);
+        }
+        console.log(pixel);
+        
         pixel.forEach((value, k) => {
           var index = (i * pixelRow.length + j) * pixel.length + k;
           imageData.data[index] = value;
@@ -112,6 +119,10 @@ export class CanvasService {
     context.putImageData(imageData, 0, 0);
     var dataUrl = context.canvas.toDataURL();
     return { imageData, dataUrl }
+  }
+
+  private correctPixelForDrawing(pixel: Pixel): PixelRGBA {
+    return pixel.toRGBA();
   }
 
   clearContext(context: CanvasRenderingContext2D) {

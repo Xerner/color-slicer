@@ -33,6 +33,15 @@ export class Pixel extends Vector {
   constructor(r: number, g: number, b: number) {
     super();
     super.push(r, g, b);
+    this._push = super.push;
+  }
+
+  toRGBA(alpha: number = 255): PixelRGBA {
+    return new PixelRGBA(this.r, this.g, this.b, alpha)
+  }
+
+  toArray(): number[] {
+    return [this.r, this.g, this.b];
   }
 
   //#region Overrides
@@ -40,6 +49,7 @@ export class Pixel extends Vector {
   override push(..._: number[]): number {
     throw new Error("Illegal operation");
   }
+  protected _push: (..._: number[]) => void;
 
   override splice(start: number, deleteCount?: number | undefined): number[];
   override splice(start: number, deleteCount: number, ...items: number[]): number[];
@@ -91,7 +101,7 @@ export class PixelRGBA extends Pixel {
 
   constructor(r: number, g: number, b: number, a: number) {
     super(r, g, b);
-    super.push(a);
+    this._push(a);
   }
 
   toRGB(): Pixel {

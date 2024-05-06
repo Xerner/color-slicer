@@ -25,7 +25,8 @@ function startKmeans(kmeansMessage: MessageEvent<KmeansArgs>) {
   var vectorData = data.map(vector => Vector.fromArray(vector));
   var vectorInitialCentroids = initialCentroids.map(vector => Vector.fromArray(vector));
   var kmeans = new Kmeans(postUpdate);
-  var kmeansResults = kmeans.kmeans(vectorData, clusters, epochs, vectorInitialCentroids, ignoreValue);
+  var ignoreValueVector = ignoreValue === null ? null : Vector.fromArray(ignoreValue);
+  var kmeansResults = kmeans.kmeans(vectorData, clusters, epochs, vectorInitialCentroids, ignoreValueVector);
   postResults(kmeansResults)
   close();
 }
