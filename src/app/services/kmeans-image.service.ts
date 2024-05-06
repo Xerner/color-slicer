@@ -13,8 +13,9 @@ import { KmeansMessageType, KmeansWorkerMessage } from "../kmeans.worker";
 import { KmeansArgs } from "../models/Kmeans";
 import { ProgressUpdate } from "../models/ProgressUpdate";
 import { DateObjectUnits, DateTime } from "luxon";
+import { Vector } from "../models/Vector";
 
-export const IGNORE_PIXEL = new Pixel(0, 0, 0, 0);
+export const IGNORE_PIXEL = new Pixel(0, 0, 0);
 
 @Injectable({
   providedIn: 'root'
@@ -154,13 +155,16 @@ export class KmeansImageService {
     return new Observable<void>((subscriber) => {
       // Create the processed images ImageDisplayInfo
       var imageObservables = processedImageStore.processedImages()
-        .filter(imageDisplayInfo => imageDisplayInfo.image() == null && imageDisplayInfo.pixels != null)
+        .filter(imageDisplayInfo => imageDisplayInfo.image() == null)
+        //.filter(imageDisplayInfo => imageDisplayInfo.image() == null && imageDisplayInfo.pixels != null)
         .map(imageDisplayInfo => this.getImageObservable(context, processedImageStore, imageDisplayInfo));
       forkJoin(imageObservables).subscribe({
-        // next: () => {
-        //   this.loadingService.update(`Finished processing image data ${loadingCount+1} / ${imageObservables.length}}`);
-        //   loadingCount++;
-        // },
+        next: () => {
+          this.loadingService.update({
+            message: `Finished processing image data ${loadingCount+1} / ${imageObservables.length}}`
+          });
+          loadingCount++;
+        },
         complete: () => {
           this.loadingService.finish();
           subscriber.next();
@@ -183,23 +187,20 @@ export class KmeansImageService {
     })
   }
 
-  private getAveragePixel(pixels: Pixel[], ignoreValue: Pixel, ignoreAlpha = true): Pixel {
+  private getAveragePixel(pixels: Pixel[], ignoreValue: Pixel): Pixel {
     var notIgnoredPixels = 0;
-    var averagePixel = pixels.reduce((sum, curPixel, i) => {
+    var averagePixel = pixels.reduce((sum, curPixel) => {
       if (curPixel != ignoreValue) {
         notIgnoredPixels++;
         return sum.add(curPixel) as Pixel;
       }
       return sum;
     }).divide(notIgnoredPixels) as Pixel;
-    if (ignoreAlpha) {
-      averagePixel.a = 255;
-    }
     return averagePixel;
   }  
 
   getLabelForImageSelection(formatString: string, label: number, image: HTMLImageElement | null) {
-    return formatString.replace("{}", label.toString());
+    return formatString.replace("{}", (label + 1).toString());
   }
 
   pixelsTo2D(processedImage: ProcessedImageStore,  pixels: Pixel[] | null) {
@@ -209,14 +210,14 @@ export class KmeansImageService {
     return this.arrayService.to2D(pixels, processedImage.size[0]);
   }
 
-  getRandomInitialCentroids(count: number) {
+  getRandomInitialCentroids(count: number, ignoreValue: Vector | null) {
     var context = this.canvasStore.context2D();
     if (context == null) {
       throw new Error("No context")
     }
     var { imageData } = this.canvasService.getImageData(context)
     var pixels = this.canvasService.imageDataToPixels(imageData)
-    return this.kmeans.getRandomInitialCentroids(pixels, count);
+    return this.kmeans.getRandomInitialCentroids(pixels, count, ignoreValue);
   }
 
   reset() {

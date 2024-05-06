@@ -71,7 +71,7 @@ export class CanvasService {
     var pixels: Pixel[] = [];
     imageData.data.forEach((_, i) => {
       if (i % 4 == 0) {
-        pixels.push(new Pixel(imageData.data[i], imageData.data[i + 1], imageData.data[i + 2], imageData.data[i + 3]));
+        pixels.push(new Pixel(imageData.data[i], imageData.data[i + 1], imageData.data[i + 2]));
       }
     })
     return pixels;
@@ -200,7 +200,8 @@ export class CanvasService {
   }
 
   pixelToColor(pixel: Pixel) {
-    return `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${pixel[3]})`
+    var alpha = pixel[3] === undefined ? '255' : pixel[3]
+    return `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${alpha})`
   }
 
   reset() {

@@ -2,6 +2,8 @@ import { Vector } from "./Vector";
 
 // I want this to be a fixed size array, but I can't figure out how to do that
 export class Pixel extends Vector {
+  //#region Properties
+
   get r(): number {
     return this[0];
   }
@@ -26,18 +28,14 @@ export class Pixel extends Vector {
     this[2] = value;
   }
 
-  get a(): number {
-    return this[3];
-  }
+  //#endregion
 
-  set a(value: number) {
-    this[3] = value;
-  }
-
-  constructor(r: number, g: number, b: number, a: number) {
+  constructor(r: number, g: number, b: number) {
     super();
-    super.push(r, g, b, a);
+    super.push(r, g, b);
   }
+
+  //#region Overrides
 
   override push(..._: number[]): number {
     throw new Error("Illegal operation");
@@ -77,5 +75,26 @@ export class Pixel extends Vector {
 
   override toString(): string {
     return `rgba(${this[0]}, ${this[1]}, ${this[2]}, ${this[3]})`;
+  }
+
+  //#endregion
+}
+
+export class PixelRGBA extends Pixel {
+  get a(): number {
+    return this[3];
+  }
+
+  set a(value: number) {
+    this[3] = value;
+  }
+
+  constructor(r: number, g: number, b: number, a: number) {
+    super(r, g, b);
+    super.push(a);
+  }
+
+  toRGB(): Pixel {
+    return new Pixel(this.r, this.g, this.b)
   }
 }

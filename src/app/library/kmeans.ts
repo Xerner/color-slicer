@@ -7,6 +7,8 @@ type ignored = null;
 const IGNORED = null;
 
 export class Kmeans {
+  readonly INITIAL_CENTROID_FIND_ATTEMPTS = 100
+
   constructor(
     private progressUpdateFunc: (progressUpdate: ProgressUpdate) => void,
   ) { }
@@ -22,7 +24,7 @@ export class Kmeans {
    * @param initialCentroids the starting centroids. Bias is largely based around these values
    */
   kmeans(data: Vector[], clusters: number, epochs: number, initialCentroids: Vector[] | null, ignoreValue: Vector | null): KmeansResults {
-    var centroids = this.initializeCentroids(data, clusters, initialCentroids)
+    var centroids = this.initializeCentroids(data, clusters, initialCentroids, ignoreValue)
     var prevCentroids = [...centroids]
     var distances = this.getDistancesFromCentroids(data, centroids, this.euclideanDistance, ignoreValue)
     var labeledData = this.getLabeledData(distances)
@@ -59,13 +61,13 @@ export class Kmeans {
     return { labels, labeledData: noIgnoredLabeledData, centroids }
   }
 
-  private initializeCentroids(data: Vector[], clusters: number, initialCentroids: Vector[] | null) {
+  private initializeCentroids(data: Vector[], clusters: number, initialCentroids: Vector[] | null, ignoreValue: Vector | null) {
     if (initialCentroids == null) {
-      return this.getRandomInitialCentroids(data, clusters);
+      return this.getRandomInitialCentroids(data, clusters, ignoreValue);
     }
     if (initialCentroids.length < clusters) {
       var missingCentroidsCount = clusters - initialCentroids.length;
-      var missingCentroids = this.getRandomInitialCentroids(data, missingCentroidsCount);
+      var missingCentroids = this.getRandomInitialCentroids(data, missingCentroidsCount, ignoreValue);
       initialCentroids.concat(missingCentroids);
     }
     if (initialCentroids.length > clusters) {
@@ -74,10 +76,23 @@ export class Kmeans {
     return initialCentroids;
   }
 
-  getRandomInitialCentroids(data: Vector[], clusters: number) {
-    var xIndexes = new Array(clusters).fill(0).map(_ => Math.floor(Math.random() * data.length))
-    var centroids = xIndexes.map(index => data[index]);
-    return centroids
+  getRandomInitialCentroids(data: Vector[], numberOfClusters: number, ignoreValue: Vector | null): Vector[] {
+    var centroids = []
+    for (let i = 0; i < numberOfClusters; i++) {
+      centroids.push(this.getValidInitialCentroid(data, ignoreValue));
+    }
+    return centroids;
+  }
+
+  private getValidInitialCentroid(data: Vector[], ignoreValue: Vector | null): Vector {
+    var centroid = data[Math.floor(Math.random() * data.length)];
+    for (let i = 0; i < this.INITIAL_CENTROID_FIND_ATTEMPTS; i++) {
+      if (ignoreValue !== null && !centroid.equals(ignoreValue)) {
+        return centroid
+      }
+      centroid = data[Math.floor(Math.random() * data.length)];
+    }
+    return centroid;
   }
 
   /**
