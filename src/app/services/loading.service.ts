@@ -59,11 +59,11 @@ export class LoadingService {
     this.loadingStore.progress.set(progress);
   }
 
-  updateTime(time: DateTime | undefined) {
+  updateTime(time: string | undefined) {
     if (time === undefined) {
       return;
     }
-    this.loadingStore.eta.set(time);
+    this.loadingStore.eta.set(DateTime.fromISO(time));
   }
 
   reset() {
