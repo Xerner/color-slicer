@@ -4,6 +4,7 @@ import { Observable, Subscriber, combineLatest, filter } from 'rxjs';
 import { CanvasStore } from './stores/canvas.store.service';
 import { ArrayService } from './arrays.service';
 import { FixedArray } from '../models/FixedArray';
+import { IGNORE_PIXEL } from './kmeans-image.service';
 
 @Injectable({
   providedIn: 'root'
@@ -122,7 +123,7 @@ export class CanvasService {
   }
 
   private correctPixelForDrawing(pixel: Pixel): PixelRGBA {
-    return pixel.toRGBA();
+    return pixel.toRGBA(pixel.equals(IGNORE_PIXEL) ? 0 : 255);
   }
 
   clearContext(context: CanvasRenderingContext2D) {
