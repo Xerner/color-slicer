@@ -28,10 +28,12 @@ permissions:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -47,18 +49,6 @@ jobs:
         run: mv ./github-pages/browser/* ./github-pages
       - name: Debug
         run: ls -l ./github-pages
-      # - run: npm test
-
-  # Single deploy job since we're just deploying
-  deploy:
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
@@ -68,5 +58,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-      - name: Debug
-        run: ls -l ./github-pages
+      # - run: npm test
