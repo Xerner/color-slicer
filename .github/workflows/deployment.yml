@@ -45,6 +45,8 @@ jobs:
       - run: npm run build --if-present
       - name: Move contents out of browser folder
         run: mv ./github-pages/browser/* ./github-pages
+      - name: Debug
+        run: ls -l
       # - run: npm test
 
   # Single deploy job since we're just deploying
@@ -66,4 +68,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-      
+      - name: Debug
+        run: ls -l
