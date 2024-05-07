@@ -106,8 +106,6 @@ export class CanvasService {
         if (pixel.length < this.EXPECTED_PIXEL_LENGTH) {
           pixel = this.correctPixelForDrawing(pixel);
         }
-        console.log(pixel);
-        
         pixel.forEach((value, k) => {
           var index = (i * pixelRow.length + j) * pixel.length + k;
           imageData.data[index] = value;
